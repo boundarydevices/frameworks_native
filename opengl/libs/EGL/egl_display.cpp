@@ -257,6 +257,11 @@ EGLBoolean egl_display_t::terminate() {
         res = EGL_TRUE;
     }
 
+#if defined(IMX5X)
+    egl_cache_t::get()->terminate();
+    disp.dpy = EGL_NO_DISPLAY;
+#endif
+	
     mHibernation.setDisplayValid(false);
 
     // Reset the extension string since it will be regenerated if we get
