@@ -59,9 +59,12 @@ FramebufferSurface::FramebufferSurface(HWComposer& hwc, int disp) :
 {
     mName = "FramebufferSurface";
     mBufferQueue->setConsumerName(mName);
-    mBufferQueue->setConsumerUsageBits(GRALLOC_USAGE_HW_FB |
-                                       GRALLOC_USAGE_HW_RENDER |
-                                       GRALLOC_USAGE_HW_COMPOSER);
+    int usage = GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER |
+                                       GRALLOC_USAGE_HW_COMPOSER;
+    if(disp != 0) {
+        usage |= GRALLOC_USAGE_HW_FBX;
+    }
+    mBufferQueue->setConsumerUsageBits(usage);
     mBufferQueue->setDefaultBufferFormat(mHwc.getFormat(disp));
     mBufferQueue->setDefaultBufferSize(mHwc.getWidth(disp),  mHwc.getHeight(disp));
     mBufferQueue->setSynchronousMode(true);
