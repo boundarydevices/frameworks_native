@@ -65,6 +65,9 @@
 #include "Layer.h"
 #include "LayerDim.h"
 #include "SurfaceFlinger.h"
+#ifdef IMX5_PIXEL_FORMAT_FIXUP
+#include "pixelflinger/format.h"
+#endif
 
 #include "DisplayHardware/FramebufferSurface.h"
 #include "DisplayHardware/HWComposer.h"
@@ -335,7 +338,14 @@ status_t SurfaceFlinger::selectConfigForAttribute(
             for (int i=0 ; i<n ; i++) {
                 EGLint value = 0;
                 eglGetConfigAttrib(dpy, configs[i], attribute, &value);
+
+#ifdef IMX5_PIXEL_FORMAT_FIXUP
+                if ((wanted == value) ||
+                    ((wanted == GGL_PIXEL_FORMAT_RGBX_8888) &&
+                     (value == GGL_PIXEL_FORMAT_RGBA_8888))) {
+#else
                 if (wanted == value) {
+#endif
                     *outConfig = configs[i];
                     delete [] configs;
                     return NO_ERROR;
