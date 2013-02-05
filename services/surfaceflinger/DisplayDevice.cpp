@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* Copyright (C) 2016 Freescale Semiconductor, Inc. */
+
 // #define LOG_NDEBUG 0
 #undef LOG_TAG
 #define LOG_TAG "DisplayDevice"
@@ -167,6 +169,21 @@ DisplayDevice::DisplayDevice(
 
 #ifdef NUM_FRAMEBUFFER_SURFACE_BUFFERS
     surface->allocateBuffers();
+#endif
+
+#ifdef EGL_ANDROID_swap_rectangle
+    // only enable swap rectange in PRIMARY and EXTERNAL display, hwcomposer
+    // has problem to support swap rectange in Virtual display.
+    if (eglSetSwapRectangleANDROID(display, surface,
+            0, 0, mDisplayWidth, mDisplayHeight) == EGL_TRUE && mType <= DISPLAY_EXTERNAL) {
+        // This could fail if this extension is not supported by this
+        // specific surface (of config)
+        mFlags |= SWAP_RECTANGLE;
+    }
+    // when we have the choice between PARTIAL_UPDATES and SWAP_RECTANGLE
+    // choose PARTIAL_UPDATES, which should be more efficient
+    if (mFlags & PARTIAL_UPDATES)
+        mFlags &= ~SWAP_RECTANGLE;
 #endif
 }
 

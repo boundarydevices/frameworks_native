@@ -28,6 +28,8 @@ extern "C" {
 ** MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 */
 
+/* Copyright (C) 2016 Freescale Semiconductor, Inc. */
+
 #include <EGL/eglplatform.h>
 
 /*************************************************************/
@@ -637,6 +639,16 @@ EGLAPI EGLBoolean eglQueryTimestampSupportedANDROID(EGLDisplay dpy, EGLSurface s
 typedef EGLAPI EGLBoolean (EGLAPIENTRYP PFNEGLGETFRAMETIMESTAMPSANDROID) (EGLDisplay dpy, EGLSurface surface, EGLint framesAgo, EGLint numTimestamps, const EGLint *timestamps, EGLnsecsANDROID *values);
 typedef EGLAPI EGLBoolean (EGLAPIENTRYP PFNEGLQUERYTIMESTAMPSUPPORTEDANDROID) (EGLDisplay dpy, EGLSurface surface, EGLint timestamp);
 #endif
+#endif
+
+/* EGL_ANDROID_swap_rectangle
+ */
+#ifndef EGL_ANDROID_swap_rectangle
+#define EGL_ANDROID_swap_rectangle 1
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLBoolean EGLAPIENTRY eglSetSwapRectangleANDROID (EGLDisplay dpy, EGLSurface draw, EGLint left, EGLint top, EGLint width, EGLint height);
+#endif /* EGL_EGLEXT_PROTOTYPES */
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLSETSWAPRECTANGLEANDROIDPROC) (EGLDisplay dpy, EGLSurface draw, EGLint left, EGLint top, EGLint width, EGLint height);
 #endif
 
 #ifdef __cplusplus

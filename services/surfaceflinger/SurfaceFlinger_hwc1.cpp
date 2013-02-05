@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
 #include <stdint.h>
@@ -1139,6 +1141,19 @@ void SurfaceFlinger::rebuildLayerStacks() {
         invalidateHwcGeometry();
 
         const LayerVector& layers(mDrawingState.layersSortedByZ);
+
+#ifdef EGL_ANDROID_swap_rectangle
+        bool forceUpdate = false;
+        const sp<DisplayDevice>& hw0(mDisplays[0]);
+        for (size_t dpy=1 ; dpy<mDisplays.size() ; dpy++) {
+            const sp<DisplayDevice>& hwi(mDisplays[dpy]);
+            if (hw0->getLayerStack() != hwi->getLayerStack()) {
+                 forceUpdate = true;
+                 break;
+            }
+        }
+#endif
+
         for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
             Region opaqueRegion;
             Region dirtyRegion;
@@ -1147,8 +1162,17 @@ void SurfaceFlinger::rebuildLayerStacks() {
             const Transform& tr(hw->getTransform());
             const Rect bounds(hw->getBounds());
             if (hw->isDisplayOn()) {
+#ifdef EGL_ANDROID_swap_rectangle
+                // below change fix dual display swap_rectange mouse cursor ghost display issue.
+                // don't update layer visible region if it is not the latest display, as
+                // all the display use one layer source, if layer's visable region updated
+                // after PRIMARY display, the dirty region of EXTERNAL display will not correct.
+                SurfaceFlinger::computeVisibleRegions(layers,
+                        hw->getLayerStack(), dirtyRegion, opaqueRegion, (dpy == mDisplays.size() - 1) || forceUpdate);
+#else
                 SurfaceFlinger::computeVisibleRegions(layers,
                         hw->getLayerStack(), dirtyRegion, opaqueRegion);
+#endif
 
                 const size_t count = layers.size();
                 for (size_t i=0 ; i<count ; i++) {
@@ -1740,7 +1764,11 @@ void SurfaceFlinger::commitTransaction()
 
 void SurfaceFlinger::computeVisibleRegions(
         const LayerVector& currentLayers, uint32_t layerStack,
+#ifdef EGL_ANDROID_swap_rectangle
+        Region& outDirtyRegion, Region& outOpaqueRegion, bool updateLayerRegion)
+#else
         Region& outDirtyRegion, Region& outOpaqueRegion)
+#endif
 {
     ATRACE_CALL();
 
@@ -1835,6 +1863,9 @@ void SurfaceFlinger::computeVisibleRegions(
             dirty = visibleRegion;
             // as well, as the old visible region
             dirty.orSelf(layer->visibleRegion);
+#ifdef EGL_ANDROID_swap_rectangle
+	    if (updateLayerRegion)
+#endif
             layer->contentDirty = false;
         } else {
             /* compute the exposed region:
@@ -1864,6 +1895,9 @@ void SurfaceFlinger::computeVisibleRegions(
         aboveOpaqueLayers.orSelf(opaqueRegion);
 
         // Store the visible region in screen space
+#ifdef EGL_ANDROID_swap_rectangle
+	if (updateLayerRegion)
+#endif
         layer->setVisibleRegion(visibleRegion);
         layer->setCoveredRegion(coveredRegion);
         layer->setVisibleNonTransparentRegion(
@@ -1963,7 +1997,17 @@ void SurfaceFlinger::doDisplayComposition(const sp<const DisplayDevice>& hw,
         // we can redraw only what's dirty, but since SWAP_RECTANGLE only
         // takes a rectangle, we must make sure to update that whole
         // rectangle in that case
-        dirtyRegion.set(hw->swapRegion.bounds());
+        const int32_t id = hw->getHwcDisplayId();
+        HWComposer& hwc(getHwComposer());
+        HWComposer::LayerListIterator cur = hwc.begin(id);
+        const HWComposer::LayerListIterator end = hwc.end(id);
+
+        const bool hasGlesComposition = hwc.hasGlesComposition(id) || (cur==end);
+        if(hasGlesComposition) {//should draw the whole screen due to gpu3d limitation
+            dirtyRegion.set(hw->bounds());
+        }else {
+            dirtyRegion.set(hw->swapRegion.bounds());
+        }
     } else {
         if (flags & DisplayDevice::PARTIAL_UPDATES) {
             // We need to redraw the rectangle that will be updated
