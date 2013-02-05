@@ -14,6 +14,8 @@
  ** limitations under the License.
  */
 
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
 #include <ctype.h>
@@ -712,6 +714,7 @@ __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname)
     // internally by the Android EGL layer.
     if (!strcmp(procname, "eglSetBlobCacheFuncsANDROID") ||
         !strcmp(procname, "eglDupNativeFenceFDANDROID") ||
+        !strcmp(procname, "eglSetSwapRectangleANDROID") ||
         !strcmp(procname, "eglWaitSyncANDROID") ||
         !strcmp(procname, "eglHibernateProcessIMG") ||
         !strcmp(procname, "eglAwakenProcessIMG")) {
@@ -1279,6 +1282,38 @@ EGLint eglWaitSyncANDROID(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags)
         result = cnx->egl.eglWaitSyncANDROID(dp->disp.dpy, sync, flags);
     }
     return result;
+}
+
+EGLBoolean eglSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface draw,
+        EGLint left, EGLint top, EGLint width, EGLint height)
+{
+    clearError();
+
+    //The empty swap region should not be set since all layers are not drawn by surfaceflinger
+    if(!width || !height) {
+        return setError(EGL_BAD_PARAMETER, NULL);
+    }
+
+    const egl_display_ptr dp = validate_display(dpy);
+    if (!dp) return EGL_FALSE;
+
+    //Because "EGL_ANDROID_swap_rectangle" extension cannot be exposed to applications,
+    //The extension should be checked when eglSetSwapRectangleANDROID is called by surfaceflinger
+    const char* exts = dp->disp.queryString.extensions;
+    if(!exts || !strstr(exts, "EGL_ANDROID_swap_rectangle")) {
+        return EGL_FALSE;
+    }
+
+    SurfaceRef _s(dp.get(), draw);
+    if (!_s.get())
+        return setError(EGL_BAD_SURFACE, EGL_FALSE);
+
+    egl_surface_t const * const s = get_surface(draw);
+    if (s->cnx->egl.eglSetSwapRectangleANDROID) {
+        return s->cnx->egl.eglSetSwapRectangleANDROID(
+                dp->disp.dpy, s->surface, left, top, width, height);
+    }
+    return setError(EGL_BAD_DISPLAY, NULL);
 }
 
 // ----------------------------------------------------------------------------
