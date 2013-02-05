@@ -464,6 +464,10 @@ private:
      */
 
     sp<IBinder> mExtDisplayToken;
+
+    //enabled by debug.sf.showfps for debug purpose
+    int  mDebugFps;
+    void debugShowFPS() const;
 };
 
 // ---------------------------------------------------------------------------
