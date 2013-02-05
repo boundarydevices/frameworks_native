@@ -99,6 +99,7 @@ SurfaceFlinger::SurfaceFlinger()
         mDebugRegion(0),
         mDebugDDMS(0),
         mDebugDisableHWC(0),
+        mDebugFps(0),
         mDebugDisableTransformHint(0),
         mDebugInSwapBuffers(0),
         mLastSwapBufferTime(0),
@@ -122,8 +123,13 @@ SurfaceFlinger::SurfaceFlinger()
             mDebugDDMS = 0;
         }
     }
+
+    property_get("debug.sf.showfps", value, "0");
+    mDebugFps = atoi(value);
+
     ALOGI_IF(mDebugRegion, "showupdates enabled");
     ALOGI_IF(mDebugDDMS, "DDMS debugging enabled");
+    ALOGI_IF(mDebugFps,  "showfps enabled");
 }
 
 void SurfaceFlinger::onFirstRef()
@@ -1002,6 +1008,24 @@ void SurfaceFlinger::doComposition() {
     postFramebuffer();
 }
 
+void SurfaceFlinger::debugShowFPS() const
+{
+    static int mFrameCount;
+    static int mLastFrameCount = 0;
+    static nsecs_t mLastFpsTime = 0;
+    static float mFps = 0;
+    mFrameCount++;
+    nsecs_t now = systemTime();
+    nsecs_t diff = now - mLastFpsTime;
+    if (diff > ms2ns(250)) {
+        mFps =  ((mFrameCount - mLastFrameCount) * float(s2ns(1))) / diff;
+        mLastFpsTime = now;
+        mLastFrameCount = mFrameCount;
+    }
+    // XXX: mFPS has the value we want
+    ALOGI("fps - %.2f",mFps);
+}
+
 void SurfaceFlinger::postFramebuffer()
 {
     ATRACE_CALL();
@@ -1042,6 +1066,10 @@ void SurfaceFlinger::postFramebuffer()
 
     mLastSwapBufferTime = systemTime() - now;
     mDebugInSwapBuffers = 0;
+
+    if (mDebugFps) {
+        debugShowFPS();
+    }
 }
 
 void SurfaceFlinger::handleTransaction(uint32_t transactionFlags)
