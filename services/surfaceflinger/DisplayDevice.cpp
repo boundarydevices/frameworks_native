@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -126,6 +128,19 @@ DisplayDevice::DisplayDevice(
 
     // initialize the display orientation transform.
     setProjection(DisplayState::eOrientationDefault, mViewport, mFrame);
+
+#ifdef EGL_ANDROID_swap_rectangle
+    if (eglSetSwapRectangleANDROID(display, surface,
+            0, 0, mDisplayWidth, mDisplayHeight) == EGL_TRUE) {
+        // This could fail if this extension is not supported by this
+        // specific surface (of config)
+        mFlags |= SWAP_RECTANGLE;
+    }
+    // when we have the choice between PARTIAL_UPDATES and SWAP_RECTANGLE
+    // choose PARTIAL_UPDATES, which should be more efficient
+    if (mFlags & PARTIAL_UPDATES)
+        mFlags &= ~SWAP_RECTANGLE;
+#endif
 }
 
 DisplayDevice::~DisplayDevice() {
