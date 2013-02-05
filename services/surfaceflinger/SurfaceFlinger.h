@@ -506,6 +506,10 @@ private:
     nsecs_t mFrameBuckets[NUM_BUCKETS];
     nsecs_t mTotalTime;
     nsecs_t mLastSwapTime;
+
+    //enabled by debug.sf.showfps for debug purpose
+    int  mDebugFps;
+    void debugShowFPS() const;
 };
 
 }; // namespace android
