@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
 #include <stdint.h>
@@ -1704,7 +1706,17 @@ void SurfaceFlinger::doDisplayComposition(const sp<const DisplayDevice>& hw,
         // we can redraw only what's dirty, but since SWAP_RECTANGLE only
         // takes a rectangle, we must make sure to update that whole
         // rectangle in that case
-        dirtyRegion.set(hw->swapRegion.bounds());
+        const int32_t id = hw->getHwcDisplayId();
+        HWComposer& hwc(getHwComposer());
+        HWComposer::LayerListIterator cur = hwc.begin(id);
+        const HWComposer::LayerListIterator end = hwc.end(id);
+
+        const bool hasGlesComposition = hwc.hasGlesComposition(id) || (cur==end);
+        if(hasGlesComposition) {//should draw the whole screen due to gpu3d limitation
+            dirtyRegion.set(hw->bounds());
+        }else {
+            dirtyRegion.set(hw->swapRegion.bounds());
+        }
     } else {
         if (flags & DisplayDevice::PARTIAL_UPDATES) {
             // We need to redraw the rectangle that will be updated
