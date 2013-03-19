@@ -14,7 +14,7 @@
  ** limitations under the License.
  */
 
-/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2013-2015 Freescale Semiconductor, Inc. */
 
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
@@ -1829,11 +1829,13 @@ EGLBoolean eglSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface draw,
 
     //The empty swap region should not be set since all layers are not drawn by surfaceflinger
     if(!width || !height) {
-        return setError(EGL_BAD_PARAMETER, NULL);
+        return EGL_FALSE;
     }
 
     const egl_display_ptr dp = validate_display(dpy);
-    if (!dp) return EGL_FALSE;
+    if (!dp) {
+        return setError(EGL_BAD_DISPLAY, NULL);
+    }
 
     //Because "EGL_ANDROID_swap_rectangle" extension cannot be exposed to applications,
     //The extension should be checked when eglSetSwapRectangleANDROID is called by surfaceflinger

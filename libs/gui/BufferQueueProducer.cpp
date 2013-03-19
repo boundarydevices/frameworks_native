@@ -195,7 +195,7 @@ status_t BufferQueueProducer::waitForFreeSlotThenRelock(const char* caller,
             const int minUndequeuedCount =
                 mCore->getMinUndequeuedBufferCountLocked(async);
             if (newUndequeuedCount < minUndequeuedCount) {
-                BQ_LOGE("%s: min undequeued buffer count (%d) exceeded "
+                BQ_LOGV("%s: min undequeued buffer count (%d) exceeded "
                         "(dequeued=%d undequeued=%d)",
                         caller, minUndequeuedCount,
                         dequeuedCount, newUndequeuedCount);
