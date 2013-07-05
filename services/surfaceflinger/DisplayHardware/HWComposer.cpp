@@ -329,6 +329,7 @@ static const uint32_t DISPLAY_ATTRIBUTES[] = {
     HWC_DISPLAY_HEIGHT,
     HWC_DISPLAY_DPI_X,
     HWC_DISPLAY_DPI_Y,
+    HWC_DISPLAY_FORMAT,
     HWC_DISPLAY_NO_ATTRIBUTE,
 };
 #define NUM_DISPLAY_ATTRIBUTES (sizeof(DISPLAY_ATTRIBUTES) / sizeof(DISPLAY_ATTRIBUTES)[0])
@@ -375,6 +376,8 @@ status_t HWComposer::queryDisplayProperties(int disp) {
         case HWC_DISPLAY_DPI_Y:
             mDisplayData[disp].ydpi = values[i] / 1000.0f;
             break;
+        case HWC_DISPLAY_FORMAT:
+            mDisplayData[disp].format = values[i];
         default:
             ALOG_ASSERT(false, "unknown display attribute[%d] %#x",
                     i, DISPLAY_ATTRIBUTES[i]);
@@ -383,7 +386,10 @@ status_t HWComposer::queryDisplayProperties(int disp) {
     }
 
     // FIXME: what should we set the format to?
-    mDisplayData[disp].format = HAL_PIXEL_FORMAT_RGBA_8888;
+    if ((mDisplayData[disp].format != HAL_PIXEL_FORMAT_RGB_565) &&
+        (mDisplayData[disp].format != HAL_PIXEL_FORMAT_RGBA_8888))
+        mDisplayData[disp].format = HAL_PIXEL_FORMAT_RGBA_8888;
+
     mDisplayData[disp].connected = true;
     if (mDisplayData[disp].xdpi == 0.0f || mDisplayData[disp].ydpi == 0.0f) {
         float dpi = getDefaultDensity(h);
@@ -762,8 +768,9 @@ int HWComposer::getVisualID() const {
         // FIXME: temporary hack until HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED
         // is supported by the implementation. we can only be in this case
         // if we have HWC 1.1
-        return HAL_PIXEL_FORMAT_RGBA_8888;
+        //return HAL_PIXEL_FORMAT_RGBA_8888;
         //return HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED;
+        return mDisplayData[0].format;
     } else {
         return mFbDev->format;
     }
