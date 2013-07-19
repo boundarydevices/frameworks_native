@@ -15,6 +15,8 @@
 ** limitations under the License.
 */
 
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+
 #include <assert.h>
 #include <atomic>
 #include <errno.h>
@@ -54,6 +56,8 @@
 
 EGLBoolean EGLAPI eglSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface draw,
         EGLint left, EGLint top, EGLint width, EGLint height);
+EGLAPI EGLClientBuffer EGLAPIENTRY eglGetRenderBufferVIV(EGLClientBuffer handle);
+EGLAPI EGLBoolean EGLAPIENTRY eglPostBufferVIV(EGLClientBuffer handle);
 
 // ----------------------------------------------------------------------------
 namespace android {
@@ -168,6 +172,7 @@ struct egl_surface_t
     virtual     EGLint      getSwapBehavior() const;
     virtual     EGLBoolean  swapBuffers();
     virtual     EGLBoolean  setSwapRectangle(EGLint l, EGLint t, EGLint w, EGLint h);
+    virtual     EGLClientBuffer getRenderBuffer();
 protected:
     GGLSurface              depth;
 };
@@ -211,6 +216,9 @@ EGLBoolean egl_surface_t::setSwapRectangle(
 {
     return EGL_FALSE;
 }
+EGLClientBuffer egl_surface_t::getRenderBuffer() {
+    return 0;
+}
 
 // ----------------------------------------------------------------------------
 
@@ -236,7 +244,8 @@ struct egl_window_surface_v2_t : public egl_surface_t
     virtual     EGLint      getRefreshRate() const;
     virtual     EGLint      getSwapBehavior() const;
     virtual     EGLBoolean  setSwapRectangle(EGLint l, EGLint t, EGLint w, EGLint h);
-    
+    virtual     EGLClientBuffer  getRenderBuffer();
+
 private:
     status_t lock(ANativeWindowBuffer* buf, int usage, void** vaddr);
     status_t unlock(ANativeWindowBuffer* buf);
@@ -584,6 +593,55 @@ EGLBoolean egl_window_surface_v2_t::setSwapRectangle(
     return EGL_TRUE;
 }
 
+EGLClientBuffer egl_window_surface_v2_t::getRenderBuffer()
+{
+    static int isCompositor = -1;
+
+    if (isCompositor < 0) {
+        // detect process name
+
+        char buf[64];
+        int fd = open("/proc/self/comm", O_RDONLY);
+        // should always have read permission
+        assert(fd > 0);
+        read(fd, buf, 64);
+        close(fd);
+
+        if (!strncmp("surfaceflinger", buf, 14)) {
+            isCompositor = true;
+        }
+        else {
+            isCompositor = false;
+        }
+    }
+
+    if (isCompositor) {
+        // If this function is called and this process is compositor
+        // we will remove oldDirtyRegion to avoid copyblt by software
+        // since copyblt (copy swaprect) is always done by hwcomposer
+        if (!dirtyRegion.isEmpty()) {
+            dirtyRegion.andSelf(Rect(buffer->width, buffer->height));
+            int32_t w, h;
+
+            *((int32_t *) &buffer->common.reserved[0]) =
+                (dirtyRegion.left << 16) | dirtyRegion.top;
+
+            w = dirtyRegion.right - dirtyRegion.left;
+            h = dirtyRegion.bottom - dirtyRegion.top;
+            *((int32_t *) &buffer->common.reserved[1]) =
+                (w << 16) | h;
+        } else {
+            *((int32_t *) &buffer->common.reserved[0]) = 0;
+            *((int32_t *) &buffer->common.reserved[1]) = 0;
+        }
+
+        oldDirtyRegion = dirtyRegion;
+    }
+
+    return buffer;
+}
+
+
 EGLBoolean egl_window_surface_v2_t::bindDrawSurface(ogles_context_t* gl)
 {
     GGLSurface buffer;
@@ -886,8 +944,12 @@ static const extention_map_t gExtentionMap[] = {
             (__eglMustCastToProperFunctionPointerType)&eglClientWaitSyncKHR },
     { "eglGetSyncAttribKHR",
             (__eglMustCastToProperFunctionPointerType)&eglGetSyncAttribKHR },
-    { "eglSetSwapRectangleANDROID", 
-            (__eglMustCastToProperFunctionPointerType)&eglSetSwapRectangleANDROID }, 
+    { "eglSetSwapRectangleANDROID",
+            (__eglMustCastToProperFunctionPointerType)&eglSetSwapRectangleANDROID },
+    { "eglGetRenderBufferVIV",
+            (__eglMustCastToProperFunctionPointerType)&eglGetRenderBufferVIV},
+    { "eglPostBufferVIV",
+            (__eglMustCastToProperFunctionPointerType)&eglPostBufferVIV},
 };
 
 /*
@@ -2185,4 +2247,46 @@ EGLBoolean eglSetSwapRectangleANDROID(EGLDisplay dpy, EGLSurface draw,
     d->setSwapRectangle(left, top, width, height);
 
     return EGL_TRUE;
+}
+
+
+EGLClientBuffer eglGetRenderBufferVIV(EGLClientBuffer handle)
+{
+    EGLContext ctx = (EGLContext)getGlThreadSpecific();
+    if (ctx == EGL_NO_CONTEXT) return NULL;
+    egl_context_t* c = egl_context_t::context(ctx);
+    if (c->draw == NULL) return NULL;
+
+    egl_surface_t* d = static_cast<egl_surface_t*>(c->draw);
+    if (!d->isValid()) return NULL;
+
+    return d->getRenderBuffer();
+}
+
+EGLBoolean eglPostBufferVIV(EGLClientBuffer buffer)
+{
+    EGLBoolean result = EGL_TRUE;
+
+    EGLContext ctx = (EGLContext)getGlThreadSpecific();
+    if (ctx == EGL_NO_CONTEXT) return EGL_FALSE;
+    egl_context_t* c = egl_context_t::context(ctx);
+    if (c->draw == NULL) return EGL_FALSE;
+
+    egl_surface_t* d = static_cast<egl_surface_t*>(c->draw);
+    if (!d->isValid()) return EGL_FALSE;
+
+    if (d->getRenderBuffer() != buffer) {
+        ALOGE("%s: invalid buffer=%p", __FUNCTION__, buffer);
+        return EGL_FALSE;
+    }
+
+    result = d->swapBuffers();
+
+    // if it's bound to a context, update the buffer for 3D EGL context
+    if (d->ctx != EGL_NO_CONTEXT) {
+        d->bindDrawSurface((ogles_context_t*)d->ctx);
+        d->bindReadSurface((ogles_context_t*)d->ctx);
+    }
+
+    return result;
 }
