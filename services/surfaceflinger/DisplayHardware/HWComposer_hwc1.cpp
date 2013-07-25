@@ -430,7 +430,8 @@ status_t HWComposer::queryDisplayProperties(int disp) {
 
     // FIXME: what should we set the format to?
     if ((mDisplayData[disp].format != HAL_PIXEL_FORMAT_RGB_565) &&
-        (mDisplayData[disp].format != HAL_PIXEL_FORMAT_RGBA_8888))
+        (mDisplayData[disp].format != HAL_PIXEL_FORMAT_RGBA_8888) &&
+        (mDisplayData[disp].format != HAL_PIXEL_FORMAT_BGRA_8888))
         mDisplayData[disp].format = HAL_PIXEL_FORMAT_RGBA_8888;
 
     mDisplayData[disp].connected = true;

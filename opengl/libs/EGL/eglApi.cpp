@@ -497,8 +497,13 @@ EGLSurface eglCreateWindowSurface(  EGLDisplay dpy, EGLConfig config,
         EGLint a = 0;
         cnx->egl.eglGetConfigAttrib(iDpy, config, EGL_ALPHA_SIZE, &a);
         if (a > 0) {
-            // alpha-channel requested, there's really only one suitable format
-            format = HAL_PIXEL_FORMAT_RGBA_8888;
+            // remove hard code to RGBA_8888, need support BGRA format also,
+            // get real foramt by visual id, if fail then hard code to RGBA.
+            if (!cnx->egl.eglGetConfigAttrib(iDpy,
+                    config, EGL_NATIVE_VISUAL_ID, &format)) {
+                // alpha-channel requested, there's really only one suitable format
+                format = HAL_PIXEL_FORMAT_RGBA_8888;
+            }
         } else {
             EGLint r, g, b;
             r = g = b = 0;

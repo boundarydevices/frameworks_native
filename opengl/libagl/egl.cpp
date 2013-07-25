@@ -1039,7 +1039,7 @@ static config_pair_t const config_3_attribute_list[] = {
         { EGL_SURFACE_TYPE,     EGL_WINDOW_BIT|EGL_PBUFFER_BIT|EGL_PIXMAP_BIT },
 };
 
-// 8888 configs
+// RGBA8888 configs
 static config_pair_t const config_4_attribute_list[] = {
         { EGL_BUFFER_SIZE,     32 },
         { EGL_ALPHA_SIZE,       8 },
@@ -1089,6 +1089,31 @@ static config_pair_t const config_7_attribute_list[] = {
         { EGL_SURFACE_TYPE,     EGL_WINDOW_BIT|EGL_PBUFFER_BIT|EGL_PIXMAP_BIT },
 };
 
+// BGRA8888 configs
+static config_pair_t const config_8_attribute_list[] = {
+        { EGL_BUFFER_SIZE,     32 },
+        { EGL_ALPHA_SIZE,       8 },
+        { EGL_RED_SIZE,         8 },
+        { EGL_GREEN_SIZE,       8 },
+        { EGL_BLUE_SIZE,        8 },
+        { EGL_DEPTH_SIZE,       0 },
+        { EGL_CONFIG_ID,        2 },
+        { EGL_NATIVE_VISUAL_ID, GGL_PIXEL_FORMAT_BGRA_8888 },
+        { EGL_SURFACE_TYPE,     EGL_WINDOW_BIT|EGL_PBUFFER_BIT|EGL_PIXMAP_BIT },
+};
+
+static config_pair_t const config_9_attribute_list[] = {
+        { EGL_BUFFER_SIZE,     32 },
+        { EGL_ALPHA_SIZE,       8 },
+        { EGL_RED_SIZE,         8 },
+        { EGL_GREEN_SIZE,       8 },
+        { EGL_BLUE_SIZE,        8 },
+        { EGL_DEPTH_SIZE,      16 },
+        { EGL_CONFIG_ID,        3 },
+        { EGL_NATIVE_VISUAL_ID, GGL_PIXEL_FORMAT_BGRA_8888 },
+        { EGL_SURFACE_TYPE,     EGL_WINDOW_BIT|EGL_PBUFFER_BIT|EGL_PIXMAP_BIT },
+};
+
 static configs_t const gConfigs[] = {
         { config_0_attribute_list, NELEM(config_0_attribute_list) },
         { config_1_attribute_list, NELEM(config_1_attribute_list) },
@@ -1098,6 +1123,8 @@ static configs_t const gConfigs[] = {
         { config_5_attribute_list, NELEM(config_5_attribute_list) },
         { config_6_attribute_list, NELEM(config_6_attribute_list) },
         { config_7_attribute_list, NELEM(config_7_attribute_list) },
+        { config_8_attribute_list, NELEM(config_8_attribute_list) },
+        { config_9_attribute_list, NELEM(config_9_attribute_list) },
 };
 
 static config_management_t const gConfigManagement[] = {
