@@ -620,6 +620,9 @@ EGLClientBuffer egl_window_surface_v2_t::getRenderBuffer()
         if (!strncmp("surfaceflinger", buf, 14)) {
             isCompositor = true;
         }
+        else {
+            isCompositor = false;
+        }
     }
 
     if (isCompositor) {
@@ -2298,6 +2301,8 @@ EGLClientBuffer eglGetRenderBufferVIV(EGLClientBuffer handle)
 
 EGLBoolean eglPostBufferVIV(EGLClientBuffer buffer)
 {
+    EGLBoolean result = EGL_TRUE;
+
     EGLContext ctx = (EGLContext)getGlThreadSpecific();
     if (ctx == EGL_NO_CONTEXT) return EGL_FALSE;
     egl_context_t* c = egl_context_t::context(ctx);
@@ -2311,5 +2316,13 @@ EGLBoolean eglPostBufferVIV(EGLClientBuffer buffer)
         return EGL_FALSE;
     }
 
-    return d->swapBuffers();
+    result = d->swapBuffers();
+
+    // if it's bound to a context, update the buffer for 3D EGL context
+    if (d->ctx != EGL_NO_CONTEXT) {
+        d->bindDrawSurface((ogles_context_t*)d->ctx);
+        d->bindReadSurface((ogles_context_t*)d->ctx);
+    }
+
+    return result;
 }
