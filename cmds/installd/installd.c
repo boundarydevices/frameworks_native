@@ -1,5 +1,6 @@
 /*
 ** Copyright 2008, The Android Open Source Project
+** Copyright (C) 2013 Freescale Semiconductor, Inc.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License"); 
 ** you may not use this file except in compliance with the License. 
@@ -16,6 +17,7 @@
 
 #include <sys/capability.h>
 #include <linux/prctl.h>
+#include <cutils/properties.h>
 
 #include "installd.h"
 
@@ -520,6 +522,15 @@ static void drop_privileges() {
     }
 }
 
+static bool isNFSbooted() {
+    char prop_value[PROPERTY_VALUE_MAX] = {'\0'};
+    if (property_get("ro.nfs.mode", prop_value, "no")) {
+        if (strcmp(prop_value, "yes") == 0)
+            return true;
+    }
+    return false;
+}
+
 int main(const int argc, const char *argv[]) {
     char buf[BUFFER_MAX];
     struct sockaddr addr;
@@ -538,6 +549,7 @@ int main(const int argc, const char *argv[]) {
         exit(1);
     }
 
+    if (!isNFSbooted())
     drop_privileges();
 
     lsocket = android_get_control_socket(SOCKET_PATH);
