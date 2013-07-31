@@ -2159,6 +2159,16 @@ EGLImageKHR eglCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target,
         case HAL_PIXEL_FORMAT_RGB_565:
         case HAL_PIXEL_FORMAT_BGRA_8888:
             break;
+        //add YUV format support
+        case HAL_PIXEL_FORMAT_YV12:
+        case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+        case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+        case HAL_PIXEL_FORMAT_YCbCr_422_I:
+        case HAL_PIXEL_FORMAT_YCbCr_422_P:
+        case HAL_PIXEL_FORMAT_YCbCr_420_P:
+        case HAL_PIXEL_FORMAT_CbYCrY_422_I:
+        case HAL_PIXEL_FORMAT_YCbCr_420_SP:
+            break;
         default:
             return setError(EGL_BAD_PARAMETER, EGL_NO_IMAGE_KHR);
     }
