@@ -249,9 +249,9 @@ public:
 
     void updateCursorPosition(const sp<const DisplayDevice>& hw);
 #else
-    void setGeometry(const sp<const DisplayDevice>& hw,
+    virtual void setGeometry(const sp<const DisplayDevice>& hw,
             HWComposer::HWCLayerInterface& layer);
-    void setPerFrameData(const sp<const DisplayDevice>& hw,
+    virtual void setPerFrameData(const sp<const DisplayDevice>& hw,
             HWComposer::HWCLayerInterface& layer);
     void setAcquireFence(const sp<const DisplayDevice>& hw,
             HWComposer::HWCLayerInterface& layer);
@@ -348,6 +348,7 @@ public:
      * to the layer's size.
      */
     Rect getContentCrop() const;
+    uint32_t getContentTransform() const;
 
     /*
      * Returns if a frame is queued.
