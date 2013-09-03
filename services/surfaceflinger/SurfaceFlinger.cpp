@@ -2760,7 +2760,8 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
     if (isCpuConsumer) {
         bool formatSupportedBytBitmap =
                 (mEGLNativeVisualId == HAL_PIXEL_FORMAT_RGBA_8888) ||
-                (mEGLNativeVisualId == HAL_PIXEL_FORMAT_RGBX_8888);
+                (mEGLNativeVisualId == HAL_PIXEL_FORMAT_RGBX_8888) ||
+                (mEGLNativeVisualId == HAL_PIXEL_FORMAT_BGRA_8888);
         if (formatSupportedBytBitmap == false) {
             // the pixel format we have is not compatible with
             // Bitmap.java, which is the likely client of this API,
@@ -2906,10 +2907,12 @@ status_t SurfaceFlinger::captureScreenImplLocked(
         ALOGE("captureScreenImplLocked: eglSwapBuffers() failed 0x%4x",
                 eglGetError());
         eglDestroySurface(mEGLDisplay, eglSurface);
+        DisplayDevice::makeCurrent(mEGLDisplay, getDefaultDisplayDevice(), mEGLContext);
         return BAD_VALUE;
     }
 
     eglDestroySurface(mEGLDisplay, eglSurface);
+    DisplayDevice::makeCurrent(mEGLDisplay, getDefaultDisplayDevice(), mEGLContext);
 
     return NO_ERROR;
 }
