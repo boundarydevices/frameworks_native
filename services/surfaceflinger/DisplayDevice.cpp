@@ -99,6 +99,45 @@ DisplayDevice::DisplayDevice(
     int format;
     window->query(window, NATIVE_WINDOW_FORMAT, &format);
 
+#ifdef ENABLE_HWC_FOR_WFD
+    mBufferHandle = NULL;
+
+    if(type == DISPLAY_VIRTUAL)
+    {
+        int rel,*flags,fenceFd = -1;
+        ANativeWindowBuffer *buffer = NULL;
+
+        int usage = GRALLOC_USAGE_HW_RENDER
+              | GRALLOC_USAGE_HW_TEXTURE
+              | GRALLOC_USAGE_SW_READ_NEVER
+              | GRALLOC_USAGE_SW_WRITE_NEVER;
+
+        native_window_set_usage(window, usage);
+
+        rel = window->dequeueBuffer(window, &buffer, &fenceFd);
+
+        if (fenceFd != -1)
+        {
+            sync_wait(fenceFd, -1);
+            close(fenceFd);
+            fenceFd = -1;
+        }
+
+        if(rel != 0)
+        {
+            ALOGE(" Failed to dequeue virtual display buffer !\n");
+        }
+        else if(buffer)
+        {
+            mBufferHandle = (buffer_handle_t) buffer->handle;
+            flags = (int *)((int)mBufferHandle + sizeof(native_handle_t) + 8);
+            *flags |= 0x1;//mark PRIV_FLAGS_FRAMEBUFFER
+        }
+
+        window->cancelBuffer(window, buffer, fenceFd);
+    }
+#endif
+
     /*
      * Create our display's surface
      */
@@ -222,6 +261,14 @@ void DisplayDevice::flip(const Region& dirty) const
 }
 
 void DisplayDevice::swapBuffers(HWComposer& hwc) const {
+
+#ifdef ENABLE_HWC_FOR_WFD
+    if(mBufferHandle)
+    {
+        hwc.setFramebufferHandle(mHwcDisplayId, mBufferHandle);
+    }
+#endif
+
     // We need to call eglSwapBuffers() unless:
     // (a) there was no GLES composition this frame, or
     // (b) we're using a legacy HWC with no framebuffer target support (in

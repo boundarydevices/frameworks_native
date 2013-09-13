@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
 
 #include "VirtualDisplaySurface.h"
 
@@ -27,7 +28,9 @@ VirtualDisplaySurface::VirtualDisplaySurface(HWComposer& hwc, int32_t dispId,
         const sp<IGraphicBufferProducer>& sink, const String8& name)
 :   mSink(sink)
 {
+#ifndef ENABLE_HWC_FOR_WFD
     LOG_ALWAYS_FATAL_IF(dispId >= 0);
+#endif
 }
 
 VirtualDisplaySurface::~VirtualDisplaySurface() {

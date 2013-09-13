@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
 
 #ifndef ANDROID_SF_HWCOMPOSER_H
 #define ANDROID_SF_HWCOMPOSER_H
@@ -127,6 +128,10 @@ public:
     int fbPost(int32_t id, const sp<Fence>& acquireFence, const sp<GraphicBuffer>& buf);
     int fbCompositionComplete();
     void fbDump(String8& result);
+
+#ifdef ENABLE_HWC_FOR_WFD
+    int setFramebufferHandle(int32_t id, buffer_handle_t handle);
+#endif
 
     // Set the output buffer and acquire fence for a virtual display.
     // Returns INVALID_OPERATION if id is not a virtual display.

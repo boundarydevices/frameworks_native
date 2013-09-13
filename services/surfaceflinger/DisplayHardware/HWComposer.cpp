@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
 
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 
@@ -161,7 +162,11 @@ HWComposer::HWComposer(
             mNumDisplays = MAX_DISPLAYS;
         } else if (hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)) {
             // 1.1 adds support for multiple displays
+#ifdef ENABLE_HWC_FOR_WFD
+            mNumDisplays = MAX_DISPLAYS;
+#else
             mNumDisplays = NUM_PHYSICAL_DISPLAYS;
+#endif
         } else {
             mNumDisplays = 1;
         }
@@ -762,6 +767,34 @@ int HWComposer::fbPost(int32_t id,
         return mFbDev->post(mFbDev, buffer->handle);
     }
 }
+
+#ifdef ENABLE_HWC_FOR_WFD
+int HWComposer::setFramebufferHandle(int32_t id, buffer_handle_t handle)
+{
+    if (mHwc && hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1)) {
+        if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id)) {
+            return BAD_INDEX;
+        }
+
+        DisplayData& disp(mDisplayData[id]);
+        if (!disp.framebufferTarget) {
+          // this should never happen, but apparently eglCreateWindowSurface()
+          // triggers a Surface::queueBuffer()  on some
+          // devices (!?) -- log and ignore.
+          ALOGE("HWComposer: framebufferTarget is null");
+//        CallStack stack;
+//        stack.update();
+//        stack.dump("");
+          return NO_ERROR;
+        }
+
+        disp.fbTargetHandle = handle;
+        disp.framebufferTarget->handle = disp.fbTargetHandle;
+    }
+
+    return 0;
+}
+#endif
 
 int HWComposer::fbCompositionComplete() {
     if (mHwc && hwcHasApiVersion(mHwc, HWC_DEVICE_API_VERSION_1_1))

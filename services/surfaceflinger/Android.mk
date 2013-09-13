@@ -57,6 +57,13 @@ LOCAL_SHARED_LIBRARIES := \
 	libui \
 	libgui
 
+ifeq ($(TARGET_BOARD_PLATFORM), imx6)
+ifeq ($(HAVE_FSL_IMX_GPU3D), true)
+        LOCAL_CFLAGS += -DENABLE_HWC_FOR_WFD
+        LOCAL_SHARED_LIBRARIES += libsync
+endif
+endif
+
 LOCAL_MODULE:= libsurfaceflinger
 
 include $(BUILD_SHARED_LIBRARY)

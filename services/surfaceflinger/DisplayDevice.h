@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
 
 #ifndef ANDROID_DISPLAY_DEVICE_H
 #define ANDROID_DISPLAY_DEVICE_H
@@ -210,6 +211,10 @@ private:
     Rect mScissor;
     Transform mGlobalTransform;
     bool mNeedsFiltering;
+
+#ifdef ENABLE_HWC_FOR_WFD
+    buffer_handle_t mBufferHandle;
+#endif
 };
 
 }; // namespace android
