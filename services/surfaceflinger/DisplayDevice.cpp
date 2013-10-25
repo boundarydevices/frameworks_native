@@ -265,7 +265,13 @@ void DisplayDevice::swapBuffers(HWComposer& hwc) const {
 #ifdef ENABLE_HWC_FOR_WFD
     if(mBufferHandle)
     {
-        hwc.setFramebufferHandle(mHwcDisplayId, mBufferHandle);
+        // bypass overlay virtual display to 3D to do compostion.
+        if (!strncmp(mDisplayName, "Overlay", 7)) {
+            hwc.setFramebufferHandle(mHwcDisplayId, NULL);
+        }
+        else {
+            hwc.setFramebufferHandle(mHwcDisplayId, mBufferHandle);
+        }
     }
 #endif
 
