@@ -74,7 +74,7 @@ Rect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
 
     // the active.crop is the area of the window that gets cropped, but not
     // scaled in any ways.
-    const State& s(drawingState());
+    const State& s(getDrawingState());
 
     // apply the projection's clipping to the window crop in
     // layerstack space, and convert-back to layer space.
@@ -138,7 +138,7 @@ void LayerDim::setGeometry(
     layer.setBlending(HWC_BLENDING_DIM);
 
     // set dim value
-    const State& s(drawingState());
+    const State& s(getDrawingState());
     layer.setPlaneAlpha(s.alpha);
 
     if (isSecure() && !hw->isSecure()) {
