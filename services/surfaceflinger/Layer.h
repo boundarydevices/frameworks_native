@@ -264,6 +264,7 @@ public:
      * to the layer's size.
      */
     Rect getContentCrop() const;
+    uint32_t getContentTransform() const;
 
     // -----------------------------------------------------------------------
 
