@@ -1218,6 +1218,7 @@ void SurfaceFlinger::postFramebuffer()
     uint32_t flipCount = getDefaultDisplayDevice()->getPageFlipCount();
     if (flipCount % LOG_FRAME_STATS_PERIOD == 0) {
         logFrameStats();
+    }
 
     if (mDebugFps) {
         debugShowFPS();
