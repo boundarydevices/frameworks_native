@@ -3606,6 +3606,138 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
     return res;
 }
 
+#ifdef NO_FBO_SCREENSHOT
+/* mx6sl_evk don't have GPU 3D core, it will use software OpenGL ES1.1 (libagl)
+ * which can't support FBO feature, so mx6sl_evk screenshot can only use below
+ * implementation although it may not fast as FBO path.
+ */
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+void SurfaceFlinger::renderScreenImplLocked(
+        const sp<const DisplayDevice>& hw,
+        Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
+        uint32_t minLayerZ, uint32_t maxLayerZ,
+        bool yswap, bool useIdentityTransform, Transform::orientation_flags rotation __unused)
+{
+    ATRACE_CALL();
+
+    // get screen geometry
+    const uint32_t hw_w = hw->getWidth();
+    const uint32_t hw_h = hw->getHeight();
+
+    const bool filtering = reqWidth != hw_w || reqWidth != hw_h;
+
+    // make sure to clear all GL error flags
+    while ( glGetError() != GL_NO_ERROR ) ;
+
+    // set-up our viewport
+    glViewport(0, 0, reqWidth, reqHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    if (yswap)  glOrthof(0, hw_w, hw_h, 0, 0, 1);
+    else        glOrthof(0, hw_w, 0, hw_h, 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    // redraw the screen entirely...
+    glDisable(GL_SCISSOR_TEST);
+    glClearColor(0,0,0,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_TEXTURE_EXTERNAL_OES);
+    glDisable(GL_TEXTURE_2D);
+
+    const LayerVector& layers( mDrawingState.layersSortedByZ );
+    const size_t count = layers.size();
+    for (size_t i=0 ; i<count ; ++i) {
+        const sp<Layer>& layer(layers[i]);
+        const Layer::State& state(layer->getDrawingState());
+        if (state.layerStack == hw->getLayerStack()) {
+            if (state.z >= minLayerZ && state.z <= maxLayerZ) {
+                if (layer->isVisible()) {
+                    if (filtering) layer->setFiltering(true);
+                    layer->draw(hw, useIdentityTransform);
+                    if (filtering) layer->setFiltering(false);
+                }
+            }
+        }
+    }
+
+    // compositionComplete is needed for older driver
+    hw->compositionComplete();
+}
+
+
+status_t SurfaceFlinger::captureScreenImplLocked(
+        const sp<const DisplayDevice>& hw,
+        const sp<IGraphicBufferProducer>& producer,
+        Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
+        uint32_t minLayerZ, uint32_t maxLayerZ,
+        bool useIdentityTransform, Transform::orientation_flags rotation)
+{
+    ATRACE_CALL();
+
+    // get screen geometry
+    const uint32_t hw_w = hw->getWidth();
+    const uint32_t hw_h = hw->getHeight();
+
+    // if we have secure windows on this display, never allow the screen capture
+    if (hw->getSecureLayerVisible()) {
+        ALOGW("FB is protected: PERMISSION_DENIED");
+        return PERMISSION_DENIED;
+    }
+
+    if ((reqWidth > hw_w) || (reqHeight > hw_h)) {
+        ALOGE("size mismatch (%d, %d) > (%d, %d)",
+                reqWidth, reqHeight, hw_w, hw_h);
+        return BAD_VALUE;
+    }
+
+    reqWidth = (!reqWidth) ? hw_w : reqWidth;
+    reqHeight = (!reqHeight) ? hw_h : reqHeight;
+
+    // Create a surface to render into
+    sp<Surface> surface = new Surface(producer);
+    ANativeWindow* const window = surface.get();
+
+    // set the buffer size to what the user requested
+    native_window_set_buffers_user_dimensions(window, reqWidth, reqHeight);
+
+    // and create the corresponding EGLSurface
+    EGLSurface eglSurface = eglCreateWindowSurface(
+            mEGLDisplay, NULL, window, NULL);
+    if (eglSurface == EGL_NO_SURFACE) {
+        ALOGE("captureScreenImplLocked: eglCreateWindowSurface() failed 0x%4x",
+                eglGetError());
+        return BAD_VALUE;
+    }
+
+    if (!eglMakeCurrent(mEGLDisplay, eglSurface, eglSurface, mEGLContext)) {
+        ALOGE("captureScreenImplLocked: eglMakeCurrent() failed 0x%4x",
+                eglGetError());
+        eglDestroySurface(mEGLDisplay, eglSurface);
+        return BAD_VALUE;
+    }
+
+    renderScreenImplLocked(hw, sourceCrop, reqWidth, reqHeight, minLayerZ, maxLayerZ, false,
+                            useIdentityTransform, rotation);
+    // and finishing things up...
+    if (eglSwapBuffers(mEGLDisplay, eglSurface) != EGL_TRUE) {
+        ALOGE("captureScreenImplLocked: eglSwapBuffers() failed 0x%4x",
+                eglGetError());
+        eglDestroySurface(mEGLDisplay, eglSurface);
+        getDefaultDisplayDevice()->makeCurrent(mEGLDisplay, mEGLContext);
+        return BAD_VALUE;
+    }
+
+    eglDestroySurface(mEGLDisplay, eglSurface);
+    getDefaultDisplayDevice()->makeCurrent(mEGLDisplay, mEGLContext);
+    return NO_ERROR;
+}
+#if defined(__gl_h_)
+#undef __gl_h_
+#endif
+
+#else /* screenshot path using FBO*/
 
 void SurfaceFlinger::renderScreenImplLocked(
         const sp<const DisplayDevice>& hw,
@@ -3837,6 +3969,7 @@ status_t SurfaceFlinger::captureScreenImplLocked(
 
     return result;
 }
+#endif /* screenshot path using FBO */
 
 void SurfaceFlinger::checkScreenshot(size_t w, size_t s, size_t h, void const* vaddr,
         const sp<const DisplayDevice>& hw, uint32_t minLayerZ, uint32_t maxLayerZ) {
