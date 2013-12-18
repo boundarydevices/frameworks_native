@@ -59,18 +59,21 @@ bool LayerDim::isVisible() const {
     return !(s.flags & layer_state_t::eLayerHidden) && s.alpha;
 }
 
-Rect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
-    /*
-     * The way we compute the crop (aka. texture coordinates when we have a
-     * Layer) produces a different output from the GL code in
-     * drawWithOpenGL() due to HWC being limited to integers. The difference
-     * can be large if getContentTransform() contains a large scale factor.
-     * See comments in drawWithOpenGL() for more details.
-     */
+static Rect reduce(const Rect& win, const Region& exclude) {
+    if (CC_LIKELY(exclude.isEmpty())) {
+        return win;
+    }
+    if (exclude.isRect()) {
+        return win.reduce(exclude.getBounds());
+    }
+    return Region(win).subtract(exclude).getBounds();
+}
 
+FloatRect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
     // the content crop is the area of the content that gets scaled to the
     // layer's size.
-    Rect crop(getContentCrop());
+
+    FloatRect crop(getContentCrop());
 
     // the active.crop is the area of the window that gets cropped, but not
     // scaled in any ways.
@@ -78,17 +81,26 @@ Rect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
 
     // apply the projection's clipping to the window crop in
     // layerstack space, and convert-back to layer space.
-    // if there are no window scaling (or content scaling) involved,
-    // this operation will map to full pixels in the buffer.
-    // NOTE: should we revert to GL composition if a scaling is involved
-    // since it cannot be represented in the HWC API?
-    Rect activeCrop(s.transform.transform(s.active.crop));
+    // if there are no window scaling involved, this operation will map to full
+    // pixels in the buffer.
+    // FIXME: the 3 lines below can produce slightly incorrect clipping when we have
+    // a viewport clipping and a window transform. we should use floating point to fix this.
+
+    Rect activeCrop(s.active.w, s.active.h);
+    if (!s.active.crop.isEmpty()) {
+        activeCrop = s.active.crop;
+    }
+
+    activeCrop = s.transform.transform(activeCrop);
     activeCrop.intersect(hw->getViewport(), &activeCrop);
     activeCrop = s.transform.inverse().transform(activeCrop);
 
     // paranoia: make sure the window-crop is constrained in the
     // window's bounds
     activeCrop.intersect(Rect(s.active.w, s.active.h), &activeCrop);
+
+    // subtract the transparent region and snap to the bounds
+    activeCrop = reduce(activeCrop, s.activeTransparentRegion);
 
     if (!activeCrop.isEmpty()) {
         // Transform the window crop to match the buffer coordinate system,
@@ -106,15 +118,14 @@ Rect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
         const Rect winCrop = activeCrop.transform(
                 invTransform, s.active.w, s.active.h);
 
-        // the code below essentially performs a scaled intersection
-        // of crop and winCrop
-        float xScale = float(crop.width()) / float(winWidth);
-        float yScale = float(crop.height()) / float(winHeight);
+        // below, crop is intersected with winCrop expressed in crop's coordinate space
+        float xScale = crop.getWidth()  / float(winWidth);
+        float yScale = crop.getHeight() / float(winHeight);
 
-        int insetL = int(ceilf( winCrop.left                * xScale));
-        int insetT = int(ceilf( winCrop.top                 * yScale));
-        int insetR = int(ceilf((winWidth  - winCrop.right ) * xScale));
-        int insetB = int(ceilf((winHeight - winCrop.bottom) * yScale));
+        float insetL = winCrop.left                 * xScale;
+        float insetT = winCrop.top                  * yScale;
+        float insetR = (winWidth  - winCrop.right ) * xScale;
+        float insetB = (winHeight - winCrop.bottom) * yScale;
 
         crop.left   += insetL;
         crop.top    += insetT;
