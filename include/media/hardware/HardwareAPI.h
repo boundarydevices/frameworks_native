@@ -157,6 +157,16 @@ struct PrependSPSPPSToIDRFramesParams {
     OMX_BOOL bEnable;
 };
 
+// A pointer to this struct is passed to OMX_GetParameter when the extension
+// index for the 'OMX.google.android.index.disableAVCReorder'
+// extension is given.  The usage bits bDisable indicates that AVC reorder
+// should be enable or disable.
+struct DisableAVCReorderParams {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_BOOL bDisable;
+};
+
 }  // namespace android
 
 extern android::OMXPluginBase *createOMXPlugin();
