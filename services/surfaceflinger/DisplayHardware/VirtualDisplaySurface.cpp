@@ -86,20 +86,12 @@ VirtualDisplaySurface::VirtualDisplaySurface(HWComposer& hwc, int32_t dispId,
     mSinkBufferWidth = sinkWidth;
     mSinkBufferHeight = sinkHeight;
 
-    // Pick the buffer format to request from the sink when not rendering to it
-    // with GLES. If the consumer needs CPU access, use the default format
-    // set by the consumer. Otherwise allow gralloc to decide the format based
-    // on usage bits.
-    int sinkUsage;
-    sink->query(NATIVE_WINDOW_CONSUMER_USAGE_BITS, &sinkUsage);
-    if (sinkUsage & (GRALLOC_USAGE_SW_READ_MASK | GRALLOC_USAGE_SW_WRITE_MASK)) {
-        int sinkFormat;
-        sink->query(NATIVE_WINDOW_FORMAT, &sinkFormat);
-        mDefaultOutputFormat = sinkFormat;
-    } else {
-        mDefaultOutputFormat = HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED;
-    }
-    mOutputFormat = mDefaultOutputFormat;
+    // Normally HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED will redefine to some
+    // YUV format according to the platfrom, but mx6x hwcomposer don't suppport
+    // YUV format output so here set the output format to sinkFormat.
+    int sinkFormat;
+    sink->query(NATIVE_WINDOW_FORMAT, &sinkFormat);
+    mOutputFormat = mDefaultOutputFormat = sinkFormat;
 
     ConsumerBase::mName = String8::format("VDS: %s", mDisplayName.string());
     mConsumer->setConsumerName(ConsumerBase::mName);
