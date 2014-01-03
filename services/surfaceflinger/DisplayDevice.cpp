@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2013-2014 Freescale Semiconductor, Inc. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -81,16 +81,6 @@ DisplayDevice::DisplayDevice(
     int format;
     window->query(window, NATIVE_WINDOW_FORMAT, &format);
 
-    // Make sure that composition can never be stalled by a virtual display
-    // consumer that isn't processing buffers fast enough. We have to do this
-    // in two places:
-    // * Here, in case the display is composed entirely by HWC.
-    // * In makeCurrent(), using eglSwapInterval. Some EGL drivers set the
-    //   window's swap interval in eglMakeCurrent, so they'll override the
-    //   interval we set here.
-    if (mType >= DisplayDevice::DISPLAY_VIRTUAL)
-        window->setSwapInterval(window, 0);
-
     /*
      * Create our display's surface
      */
@@ -108,6 +98,18 @@ DisplayDevice::DisplayDevice(
     mPageFlipCount = 0;
     mViewport.makeInvalid();
     mFrame.makeInvalid();
+
+    // Make sure that composition can never be stalled by a virtual display
+    // consumer that isn't processing buffers fast enough. We have to do this
+    // in two places:
+    // * Here, in case the display is composed entirely by HWC.
+    // * In makeCurrent(), using eglSwapInterval. Some EGL drivers set the
+    //   window's swap interval in eglMakeCurrent, so they'll override the
+    //   interval we set here.
+    // call setSwapInterval() after eglCreateWindowSurface(), else it will
+    // overwrite as egl wrapper call setSwapInterval(window, 1).
+    if (mType >= DisplayDevice::DISPLAY_VIRTUAL)
+        window->setSwapInterval(window, 0);
 
     // virtual displays are always considered enabled
     mScreenAcquired = (mType >= DisplayDevice::DISPLAY_VIRTUAL);
