@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* Copyright (C) 2016 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2013-2016 Freescale Semiconductor, Inc. */
 
 // #define LOG_NDEBUG 0
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
@@ -619,8 +619,30 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
             info.orientation = 0;
         }
 
-        info.w = hwConfig->getWidth();
-        info.h = hwConfig->getHeight();
+        int width = hwConfig->getWidth();
+        int height = hwConfig->getHeight();
+
+        int displayOrientation = DisplayState::eOrientationDefault;
+        char property[PROPERTY_VALUE_MAX];
+        if (type == DisplayDevice::DISPLAY_PRIMARY) {
+            if (property_get("ro.sf.hwrotation", property, NULL) > 0) {
+                switch (atoi(property)) {
+                    case 90:
+                        displayOrientation = DisplayState::eOrientation90;
+                        break;
+                    case 270:
+                        displayOrientation = DisplayState::eOrientation270;
+                        break;
+                }
+            }
+        }
+
+        if (displayOrientation & DisplayState::eOrientationSwapMask) {
+            swap(width, height);
+        }
+
+        info.w = width;
+        info.h = height;
         info.xdpi = xdpi;
         info.ydpi = ydpi;
         info.fps = 1e9 / hwConfig->getVsyncPeriod();
