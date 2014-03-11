@@ -2133,6 +2133,14 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const 
             }
         }
     }
+    else {
+        // when display scissor changed, the letterbox region should transfer
+        // to hwc to handle it. just like 3D do above.
+        // here, the DisplayDevice'frame change can tell this.
+        int id = hw->getHwcDisplayId();
+        uint32_t transform = hw->getOrientationTransform();
+        hwc.setFramebufferTargetScissor(id, hw->getFrame(), transform);
+    }
 
     /*
      * and then, render the layers targeted at the framebuffer
