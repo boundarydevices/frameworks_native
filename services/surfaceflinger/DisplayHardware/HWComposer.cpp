@@ -594,6 +594,25 @@ status_t HWComposer::setFramebufferTarget(int32_t id,
     return NO_ERROR;
 }
 
+status_t HWComposer::setFramebufferTargetScissor(int32_t id, const Rect& scissor)
+{
+    if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id)) {
+        return BAD_INDEX;
+    }
+    DisplayData& disp(mDisplayData[id]);
+    if (!disp.framebufferTarget) {
+        // this should never happen, but apparently eglCreateWindowSurface()
+        // triggers a Surface::queueBuffer()  on some
+        // devices (!?) -- log and ignore.
+        ALOGE("HWComposer: framebufferTarget is null");
+        return NO_ERROR;
+    }
+
+    memcpy(&disp.framebufferTarget->displayFrame, &scissor,
+               sizeof(disp.framebufferTarget->displayFrame));
+    return NO_ERROR;
+}
+
 status_t HWComposer::prepare() {
     for (size_t i=0 ; i<mNumDisplays ; i++) {
         DisplayData& disp(mDisplayData[i]);
