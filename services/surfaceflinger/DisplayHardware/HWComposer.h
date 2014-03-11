@@ -138,6 +138,7 @@ public:
     status_t setOutputBuffer(int32_t id, const sp<Fence>& acquireFence,
             const sp<GraphicBuffer>& buf);
 
+    status_t setFramebufferTargetScissor(int32_t id, const Rect& scissor);
     // Get the retire fence for the last committed frame. This fence will
     // signal when the h/w composer is completely finished with the frame.
     // For physical displays, it is no longer being displayed. For virtual
