@@ -70,7 +70,7 @@ SyncFeatures::SyncFeatures() : Singleton<SyncFeatures>(),
 bool SyncFeatures::useNativeFenceSync() const {
     // EGL_ANDROID_native_fence_sync is not compatible with using the
     // EGL_KHR_fence_sync extension for the same purpose.
-    return mHasNativeFenceSync;
+    return mHasNativeFenceSync && mHasFenceSync;
 }
 bool SyncFeatures::useFenceSync() const {
 #ifdef DONT_USE_FENCE_SYNC
