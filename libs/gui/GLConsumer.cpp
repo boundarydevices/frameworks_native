@@ -981,7 +981,7 @@ status_t GLConsumer::doGLFenceWaitLocked() const {
     }
 
     if (mCurrentFence->isValid()) {
-        if (SyncFeatures::getInstance().useWaitSync()) {
+        if (SyncFeatures::getInstance().useNativeFenceSync()) {
             // Create an EGLSyncKHR from the current fence.
             int fenceFd = mCurrentFence->dup();
             if (fenceFd == -1) {
@@ -1012,6 +1012,22 @@ status_t GLConsumer::doGLFenceWaitLocked() const {
                         eglErr);
                 return UNKNOWN_ERROR;
             }
+        } else if (SyncFeatures::getInstance().useFenceSync()) {
+            EGLSyncKHR fence = eglCreateSyncKHR(dpy, EGL_SYNC_FENCE_KHR, NULL);
+            if (fence == EGL_NO_SYNC_KHR) {
+                ST_LOGE("doGLFenceWait: error creating fence: %#x",
+                        eglGetError());
+                return UNKNOWN_ERROR;
+            }
+            EGLint result = eglClientWaitSyncKHR(dpy, fence, 0, 1000000000);
+            if (result == EGL_FALSE) {
+                ST_LOGE("doGLFenceWait: error waiting for fence: %#x", eglGetError());
+                return UNKNOWN_ERROR;
+            } else if (result == EGL_TIMEOUT_EXPIRED_KHR) {
+                ST_LOGE("sdoGLFenceWait: timeout waiting for fence");
+                return TIMED_OUT;
+            }
+            eglDestroySyncKHR(dpy, fence);
         } else {
             status_t err = mCurrentFence->waitForever(
                     "GLConsumer::doGLFenceWaitLocked");
