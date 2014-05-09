@@ -590,10 +590,11 @@ status_t BufferQueue::queueBuffer(int buf,
                 }
                 // and we record the new buffer in the queued list
                 *front = item;
+                mFrameLost ++;
             } else {
                 mQueue.push_back(item);
                 listener = mConsumerListener;
-                mFrameLost ++;
+
             }
         }
 
