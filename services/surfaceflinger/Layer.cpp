@@ -414,7 +414,8 @@ void Layer::setPerFrameData(const sp<const DisplayDevice>& hw,
     // Apply this display's projection's viewport to the visible region
     // before giving it to the HWC HAL.
     const Transform& tr = hw->getTransform();
-    Region visible = tr.transform(visibleRegion.intersect(hw->getViewport()));
+    Region visible = tr.transform(visibleNonTransparentRegion.intersect(
+                                   hw->getViewport()));
     layer.setVisibleRegionScreen(visible);
 
     // NOTE: buffer can be NULL if the client never drew into this
