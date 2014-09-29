@@ -151,6 +151,25 @@ status_t EGLTextureObject::setImage(ANativeWindowBuffer* native_buffer)
     sur.height= native_buffer->height;
     sur.stride= native_buffer->stride;
     sur.format= native_buffer->format;
+
+    /* libagl surfacetexture render only support the format defined in GGLPixelFormat,
+       we did some hack in eglCreateImageKHR to support surfacetexture createImage for
+       YUV format so that video playback can work on mx6sl_evk with 2D hwcomposer, but
+       here we should not pass YUV format to libagl render or composition, else we may
+       some mess result for example screenshot function */
+    switch(native_buffer->format) {
+        case HAL_PIXEL_FORMAT_YV12:
+        case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+        case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+        case HAL_PIXEL_FORMAT_YCbCr_422_I:
+        case HAL_PIXEL_FORMAT_YCbCr_422_P:
+        case HAL_PIXEL_FORMAT_YCbCr_420_P:
+        case HAL_PIXEL_FORMAT_CbYCrY_422_I:
+        case HAL_PIXEL_FORMAT_YCbCr_420_SP:
+            sur.format= GGL_PIXEL_FORMAT_NONE;
+            break;
+    }
+
     sur.data  = 0;
     setSurface(&sur);
     buffer = native_buffer;
