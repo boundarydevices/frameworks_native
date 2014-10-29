@@ -1065,10 +1065,19 @@ void SurfaceFlinger::doDebugFlashRegions()
         usleep(mDebugRegion * 1000);
     }
 
+    for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
+        mDisplays[dpy]->beginFrame(true);
+    }
+
     HWComposer& hwc(getHwComposer());
     if (hwc.initCheck() == NO_ERROR) {
         status_t err = hwc.prepare();
         ALOGE_IF(err, "HWComposer::prepare failed (%s)", strerror(-err));
+
+        for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
+            sp<const DisplayDevice> hw(mDisplays[dpy]);
+            hw->prepareFrame(hwc);
+        }
     }
 }
 

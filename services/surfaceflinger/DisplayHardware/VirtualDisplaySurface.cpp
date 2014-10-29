@@ -380,7 +380,9 @@ status_t VirtualDisplaySurface::dequeueBuffer(int* pslot, sp<Fence>* fence,
     if (mDisplayId < 0)
         return mSource[SOURCE_SINK]->dequeueBuffer(pslot, fence, w, h, format, usage);
 
-    VDS_LOGW_IF(mDbgState != DBG_STATE_PREPARED,
+    // In GLES_DONE state (after queueBuffer), eglSwapBuffers may call dequeueBuffer
+    // for next frame.
+    VDS_LOGW_IF((mDbgState != DBG_STATE_PREPARED) && (mDbgState != DBG_STATE_GLES_DONE),
             "Unexpected dequeueBuffer() in %s state", dbgStateStr());
     mDbgState = DBG_STATE_GLES;
 
@@ -523,9 +525,13 @@ status_t VirtualDisplaySurface::cancelBuffer(int pslot,
             "Unexpected cancelBuffer(pslot=%d) in %s state", pslot,
             dbgStateStr());
     VDS_LOGV("cancelBuffer pslot=%d", pslot);
-    Source source = fbSourceForCompositionType(mCompositionType);
-    return mSource[source]->cancelBuffer(
-            mapProducer2SourceSlot(source, pslot), fence);
+    if (mCompositionType == COMPOSITION_MIXED) {
+        Source source = fbSourceForCompositionType(mCompositionType);
+        mSource[source]->cancelBuffer(
+                mapProducer2SourceSlot(source, pslot), fence);
+    } else {
+        /* Nothing for GLES-only, HWC composition. */
+    }
 }
 
 int VirtualDisplaySurface::query(int what, int* value) {
