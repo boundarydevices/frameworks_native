@@ -385,7 +385,7 @@ status_t HWComposer::queryDisplayProperties(int disp) {
                     config.ydpi = values[i] / 1000.0f;
                     break;
                 case HWC_DISPLAY_FORMAT:
-                    config.format = values[i];
+                    mDisplayData[disp].format = values[i];
                     break;
                 default:
                     ALOG_ASSERT(false, "unknown display attribute[%zu] %#x",
