@@ -407,7 +407,7 @@ status_t HWComposer::queryDisplayProperties(int disp) {
                     config.colorTransform = values[i];
                     break;
                 case HWC_DISPLAY_FORMAT:
-                    config.format = values[i];
+                    mDisplayData[disp].format = values[i];
                     break;
                 default:
                     ALOG_ASSERT(false, "unknown display attribute[%zu] %#x",
