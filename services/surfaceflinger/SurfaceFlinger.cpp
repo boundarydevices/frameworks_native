@@ -656,8 +656,8 @@ status_t SurfaceFlinger::getDisplayConfigs(const sp<IBinder>& display,
             swap(width, height);
         }
 
-        info->w = width;
-        info->h = height;
+        info.w = width;
+        info.h = height;
         info.xdpi = xdpi;
         info.ydpi = ydpi;
         info.fps = float(1e9 / hwConfig.refresh);
@@ -1014,7 +1014,7 @@ void SurfaceFlinger::doDebugFlashRegions()
     }
 
     for (size_t dpy=0 ; dpy<mDisplays.size() ; dpy++) {
-        mDisplays[dpy]->beginFrame();
+        mDisplays[dpy]->beginFrame(true);
     }
 
     HWComposer& hwc(getHwComposer());
