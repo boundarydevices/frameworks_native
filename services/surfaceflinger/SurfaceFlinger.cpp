@@ -3226,9 +3226,9 @@ status_t SurfaceFlinger::captureScreen(const sp<IBinder>& display,
 #include <GLES/glext.h>
 void SurfaceFlinger::renderScreenImplLocked(
         const sp<const DisplayDevice>& hw,
-        uint32_t reqWidth, uint32_t reqHeight,
+        Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
         uint32_t minLayerZ, uint32_t maxLayerZ,
-        bool yswap)
+        bool yswap, bool useIdentityTransform, Transform::orientation_flags rotation)
 {
     ATRACE_CALL();
 
@@ -3266,7 +3266,7 @@ void SurfaceFlinger::renderScreenImplLocked(
             if (state.z >= minLayerZ && state.z <= maxLayerZ) {
                 if (layer->isVisible()) {
                     if (filtering) layer->setFiltering(true);
-                    layer->draw(hw);
+                    layer->draw(hw, useIdentityTransform);
                     if (filtering) layer->setFiltering(false);
                 }
             }
@@ -3281,8 +3281,9 @@ void SurfaceFlinger::renderScreenImplLocked(
 status_t SurfaceFlinger::captureScreenImplLocked(
         const sp<const DisplayDevice>& hw,
         const sp<IGraphicBufferProducer>& producer,
-        uint32_t reqWidth, uint32_t reqHeight,
-        uint32_t minLayerZ, uint32_t maxLayerZ)
+        Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
+        uint32_t minLayerZ, uint32_t maxLayerZ,
+        bool useIdentityTransform, Transform::orientation_flags rotation)
 {
     ATRACE_CALL();
 
@@ -3314,7 +3315,7 @@ status_t SurfaceFlinger::captureScreenImplLocked(
 
     // and create the corresponding EGLSurface
     EGLSurface eglSurface = eglCreateWindowSurface(
-            mEGLDisplay, mEGLConfig, window, NULL);
+            mEGLDisplay, NULL, window, NULL);
     if (eglSurface == EGL_NO_SURFACE) {
         ALOGE("captureScreenImplLocked: eglCreateWindowSurface() failed 0x%4x",
                 eglGetError());
@@ -3328,8 +3329,8 @@ status_t SurfaceFlinger::captureScreenImplLocked(
         return BAD_VALUE;
     }
 
-    renderScreenImplLocked(hw, reqWidth, reqHeight, minLayerZ, maxLayerZ, false);
-
+    renderScreenImplLocked(hw, sourceCrop, reqWidth, reqHeight, minLayerZ, maxLayerZ, false,
+                            useIdentityTransform, rotation);
     // and finishing things up...
     if (eglSwapBuffers(mEGLDisplay, eglSurface) != EGL_TRUE) {
         ALOGE("captureScreenImplLocked: eglSwapBuffers() failed 0x%4x",
