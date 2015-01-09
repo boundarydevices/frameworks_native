@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* Copyright (C) 2016 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2013-2016 Freescale Semiconductor, Inc. */
 
 // #define LOG_NDEBUG 0
 #undef LOG_TAG
@@ -133,8 +133,12 @@ DisplayDevice::DisplayDevice(
     // * In makeCurrent(), using eglSwapInterval. Some EGL drivers set the
     //   window's swap interval in eglMakeCurrent, so they'll override the
     //   interval we set here.
-    if (mType >= DisplayDevice::DISPLAY_VIRTUAL)
+    if (mType >= DisplayDevice::DISPLAY_VIRTUAL) {
+        // reset virtual display buffer format.
+        // because it is changed by eglCreateWindowSurface().
+        native_window_set_buffers_format(window, format);
         window->setSwapInterval(window, 0);
+    }
 
     mConfig = config;
     mDisplay = display;
