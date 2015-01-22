@@ -661,7 +661,8 @@ status_t HWComposer::setFramebufferTarget(int32_t id,
     return NO_ERROR;
 }
 
-status_t HWComposer::setFramebufferTargetScissor(int32_t id, const Rect& scissor)
+status_t HWComposer::setFramebufferTargetScissor(int32_t id, const Rect& scissor,
+                                                 uint32_t transform)
 {
     if (uint32_t(id)>31 || !mAllocatedDisplayIDs.hasBit(id)) {
         return BAD_INDEX;
@@ -677,6 +678,7 @@ status_t HWComposer::setFramebufferTargetScissor(int32_t id, const Rect& scissor
 
     memcpy(&disp.framebufferTarget->displayFrame, &scissor,
                sizeof(disp.framebufferTarget->displayFrame));
+    disp.framebufferTarget->transform = transform;
     return NO_ERROR;
 }
 

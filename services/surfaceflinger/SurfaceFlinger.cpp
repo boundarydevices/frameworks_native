@@ -2084,7 +2084,8 @@ bool SurfaceFlinger::doComposeSurfaces(const sp<const DisplayDevice>& hw, const 
         // to hwc to handle it. just like 3D do above.
         // here, the DisplayDevice'frame change can tell this.
         int id = hw->getHwcDisplayId();
-        hwc.setFramebufferTargetScissor(id, hw->getFrame());
+        uint32_t transform = hw->getOrientationTransform();
+        hwc.setFramebufferTargetScissor(id, hw->getFrame(), transform);
     }
 
     /*
