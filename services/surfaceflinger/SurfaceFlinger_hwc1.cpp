@@ -3561,12 +3561,26 @@ void SurfaceFlinger::renderScreenImplLocked(
     // make sure to clear all GL error flags
     while ( glGetError() != GL_NO_ERROR ) ;
 
+    // if a default or invalid sourceCrop is passed in, set reasonable values
+    if (sourceCrop.width() == 0 || sourceCrop.height() == 0 ||
+            !sourceCrop.isValid()) {
+        sourceCrop.setLeftTop(Point(0, 0));
+        sourceCrop.setRightBottom(Point(hw_w, hw_h));
+    }
+
+    size_t l = sourceCrop.left;
+    size_t r = sourceCrop.right;
+
+    // In GL, (0, 0) is the bottom-left corner, so flip y coordinate.
+    size_t t = hw_h - sourceCrop.top;
+    size_t b = hw_h - sourceCrop.bottom;
+
     // set-up our viewport
     glViewport(0, 0, reqWidth, reqHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if (yswap)  glOrthof(0, hw_w, hw_h, 0, 0, 1);
-    else        glOrthof(0, hw_w, 0, hw_h, 0, 1);
+    if (yswap)  glOrthof(l, r, t, b, 0, 1);
+    else        glOrthof(l, r, b, t, 0, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
