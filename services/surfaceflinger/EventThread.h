@@ -100,6 +100,9 @@ public:
     void sendVsyncHintOff();
 
 private:
+#ifdef VSYNC_DIRECT_REFRESH
+    friend class SurfaceFlinger;
+#endif
     virtual bool        threadLoop();
     virtual void        onFirstRef();
 
