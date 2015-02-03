@@ -103,6 +103,9 @@ public:
     void setPhaseOffset(nsecs_t phaseOffset);
 
 private:
+#ifdef VSYNC_DIRECT_REFRESH
+    friend class SurfaceFlinger;
+#endif
     virtual bool        threadLoop();
     virtual void        onFirstRef();
 

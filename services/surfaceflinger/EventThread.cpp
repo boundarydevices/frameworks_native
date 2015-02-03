@@ -340,6 +340,7 @@ Vector< sp<EventThread::Connection> > EventThread::waitForEvent(
 }
 
 void EventThread::enableVSyncLocked() {
+#ifndef VSYNC_DIRECT_REFRESH
     if (!mUseSoftwareVSync) {
         // never enable h/w VSYNC when screen is off
         if (!mVsyncEnabled) {
@@ -348,6 +349,7 @@ void EventThread::enableVSyncLocked() {
             mVSyncSource->setVSyncEnabled(true);
         }
     }
+#endif
     mDebugVsyncEnabled = true;
     sendVsyncHintOnLocked();
 }

@@ -868,6 +868,11 @@ void SurfaceFlinger::disableHardwareVsync(bool makeUnavailable) {
 
 void SurfaceFlinger::onVSyncReceived(int type, nsecs_t timestamp) {
     bool needsHwVsync = false;
+#ifdef VSYNC_DIRECT_REFRESH
+    mEventThread->onVSyncEvent(timestamp);
+    mSFEventThread->onVSyncEvent(timestamp);
+    return;
+#endif
 
     { // Scope for the lock
         Mutex::Autolock _l(mHWVsyncLock);
