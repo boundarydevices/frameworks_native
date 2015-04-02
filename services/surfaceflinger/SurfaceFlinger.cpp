@@ -2411,6 +2411,9 @@ void SurfaceFlinger::setPowerModeInternal(const sp<DisplayDevice>& hw,
         getHwComposer().setPowerMode(type, mode);
         if (type == DisplayDevice::DISPLAY_PRIMARY) {
             // FIXME: eventthread only knows about the main display right now
+#ifdef VSYNC_DIRECT_REFRESH
+            mSFEventThread->onScreenAcquired();
+#endif
             mEventThread->onScreenAcquired();
             resyncToHardwareVsync(true);
         }
@@ -2422,6 +2425,9 @@ void SurfaceFlinger::setPowerModeInternal(const sp<DisplayDevice>& hw,
             disableHardwareVsync(true); // also cancels any in-progress resync
 
             // FIXME: eventthread only knows about the main display right now
+#ifdef VSYNC_DIRECT_REFRESH
+            mSFEventThread->onScreenReleased();
+#endif
             mEventThread->onScreenReleased();
         }
 
