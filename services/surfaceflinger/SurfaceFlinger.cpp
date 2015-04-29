@@ -1426,9 +1426,10 @@ void SurfaceFlinger::handleTransactionLocked(uint32_t transactionFlags)
                                     NATIVE_WINDOW_HEIGHT, &height);
                             ALOGE_IF(status != NO_ERROR,
                                     "Unable to query height (%d)", status);
-                            if (MAX_VIRTUAL_DISPLAY_DIMENSION == 0 ||
-                                    (width <= MAX_VIRTUAL_DISPLAY_DIMENSION &&
-                                     height <= MAX_VIRTUAL_DISPLAY_DIMENSION)) {
+                            if (MAX_VIRTUAL_DISPLAY_DIMENSION_W == 0 ||
+                                MAX_VIRTUAL_DISPLAY_DIMENSION_H == 0 ||
+                                    (width <= MAX_VIRTUAL_DISPLAY_DIMENSION_W &&
+                                     height <= MAX_VIRTUAL_DISPLAY_DIMENSION_H)) {
                                 hwcDisplayId = allocateHwcDisplayId(state.type);
                             }
 
