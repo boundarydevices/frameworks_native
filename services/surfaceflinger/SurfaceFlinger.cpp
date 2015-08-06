@@ -141,7 +141,6 @@ SurfaceFlinger::SurfaceFlinger()
         mDebugRegion(0),
         mDebugDDMS(0),
         mDebugDisableHWC(0),
-        mDebugFps(0),
         mDebugDisableTransformHint(0),
         mDebugInSwapBuffers(0),
         mLastSwapBufferTime(0),
@@ -156,7 +155,8 @@ SurfaceFlinger::SurfaceFlinger()
         mHasPoweredOff(false),
         mFrameBuckets(),
         mTotalTime(0),
-        mLastSwapTime(0)
+        mLastSwapTime(0),
+        mDebugFps(0)
 {
     ALOGI("SurfaceFlinger is starting");
 

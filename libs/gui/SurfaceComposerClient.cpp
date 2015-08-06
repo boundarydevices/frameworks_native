@@ -736,11 +736,11 @@ status_t ScreenshotClient::update(const sp<IBinder>& display,
         if (err == NO_ERROR) {
             if (mBuffer.format == HAL_PIXEL_FORMAT_BGRA_8888) {
                 mBuffer.format = HAL_PIXEL_FORMAT_RGBA_8888;
-                int *pData = (int *)mBuffer.data;
+                unsigned int *pData = reinterpret_cast<unsigned int *>(mBuffer.data);
                 for (uint32_t i=0; i<mBuffer.height; i++) {
-                    int *data = pData + i * mBuffer.stride;
+                    unsigned int *data = pData + i * mBuffer.stride;
                     for (uint32_t j=0; j<mBuffer.width; j++) {
-                        int value = *data;
+                        unsigned int value = *data;
                         *data = (value & 0xff00ff00) |
                                 ((value & 0x00ff0000) >> 16) |
                                 ((value & 0x000000ff) << 16);
