@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Android Open Source Project
+ * Copyright (C) 2015 Freescale Semiconductor, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -215,17 +216,20 @@ status_t BufferQueueProducer::waitForFreeSlotThenRelock(const char* caller,
             BQ_LOGV("%s: queue size is %zu, waiting", caller,
                     mCore->mQueue.size());
         } else {
-            if (!mCore->mFreeBuffers.empty()) {
-                auto slot = mCore->mFreeBuffers.begin();
-                *found = *slot;
-                mCore->mFreeBuffers.erase(slot);
-            } else if (mCore->mAllowAllocation && !mCore->mFreeSlots.empty()) {
+            if (mCore->mAllowAllocation && !mCore->mFreeSlots.empty()) {
                 auto slot = mCore->mFreeSlots.begin();
                 // Only return free slots up to the max buffer count
                 if (*slot < maxBufferCount) {
                     *found = *slot;
                     mCore->mFreeSlots.erase(slot);
                 }
+            }
+
+            if ((*found == BufferQueueCore::INVALID_BUFFER_SLOT) &&
+                !mCore->mFreeBuffers.empty()) {
+                auto slot = mCore->mFreeBuffers.begin();
+                *found = *slot;
+                mCore->mFreeBuffers.erase(slot);
             }
         }
 
