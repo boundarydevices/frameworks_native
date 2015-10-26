@@ -867,13 +867,13 @@ void SurfaceFlinger::disableHardwareVsync(bool makeUnavailable) {
 }
 
 void SurfaceFlinger::onVSyncReceived(int type, nsecs_t timestamp) {
-    bool needsHwVsync = false;
 #ifdef VSYNC_DIRECT_REFRESH
+    //bypass unused parameter's compiling error
+    (void)type;
     mEventThread->onVSyncEvent(timestamp);
     mSFEventThread->onVSyncEvent(timestamp);
-    return;
-#endif
-
+#else
+    bool needsHwVsync = false;
     { // Scope for the lock
         Mutex::Autolock _l(mHWVsyncLock);
         if (type == 0 && mPrimaryHWVsyncEnabled) {
@@ -886,6 +886,7 @@ void SurfaceFlinger::onVSyncReceived(int type, nsecs_t timestamp) {
     } else {
         disableHardwareVsync(false);
     }
+#endif
 }
 
 void SurfaceFlinger::onHotplugReceived(int type, bool connected) {
@@ -3394,7 +3395,7 @@ void SurfaceFlinger::renderScreenImplLocked(
         const sp<const DisplayDevice>& hw,
         Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
         uint32_t minLayerZ, uint32_t maxLayerZ,
-        bool yswap, bool useIdentityTransform, Transform::orientation_flags rotation)
+        bool yswap, bool useIdentityTransform, Transform::orientation_flags rotation __unused)
 {
     ATRACE_CALL();
 
