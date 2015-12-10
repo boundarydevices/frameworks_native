@@ -15,7 +15,7 @@
 ** limitations under the License.
 */
 
-/* Copyright (C) 2013 Freescale Semiconductor, Inc. */
+/* Copyright (C) 2013-2016 Freescale Semiconductor, Inc. */
 
 #include <assert.h>
 #include <atomic>
@@ -439,6 +439,10 @@ void egl_window_surface_v2_t::disconnect()
     if (previousBuffer) {
         previousBuffer->common.decRef(&previousBuffer->common); 
         previousBuffer = 0;
+    }
+
+    if (depth.format && depth.data) {
+        free(depth.data); //free the depth buffer allocate in connect()
     }
 }
 
