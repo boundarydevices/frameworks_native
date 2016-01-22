@@ -144,8 +144,7 @@ GLConsumer::GLConsumer(const sp<IGraphicBufferConsumer>& bq, uint32_t tex,
     mEglDisplay(EGL_NO_DISPLAY),
     mEglContext(EGL_NO_CONTEXT),
     mCurrentTexture(BufferQueue::INVALID_BUFFER_SLOT),
-    mAttached(true),
-    mSkipGLReleaseFence(false)
+    mAttached(true)
 {
     GLC_LOGV("GLConsumer");
 
@@ -551,10 +550,6 @@ void GLConsumer::setReleaseFence(const sp<Fence>& fence) {
     }
 }
 
-void GLConsumer::setSkipGLReleaseFence(void) {
-    mSkipGLReleaseFence = true;
-}
-
 status_t GLConsumer::detachFromContext() {
     ATRACE_CALL();
     GLC_LOGV("detachFromContext");
@@ -658,10 +653,6 @@ status_t GLConsumer::syncForReleaseLocked(EGLDisplay dpy) {
 
     if (mCurrentTexture != BufferQueue::INVALID_BUFFER_SLOT) {
         if (SyncFeatures::getInstance().useNativeFenceSync()) {
-            if (mSkipGLReleaseFence) {
-                mSkipGLReleaseFence = false;
-                return NO_ERROR;
-            }
             EGLSyncKHR sync = eglCreateSyncKHR(dpy,
                     EGL_SYNC_NATIVE_FENCE_ANDROID, NULL);
             if (sync == EGL_NO_SYNC_KHR) {

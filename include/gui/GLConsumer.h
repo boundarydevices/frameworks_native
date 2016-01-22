@@ -112,12 +112,6 @@ public:
     // union fence.
     void setReleaseFence(const sp<Fence>& fence);
 
-    // skip creating/adding another sync fence from OpenGL ES renderer when
-    // current buffer is released.
-    // In case fence(s) already added by setReleaseFence function or current
-    // buffer is not read since acquired, sync fence is not needed.
-    void setSkipGLReleaseFence(void);
-
     // setDefaultMaxBufferCount sets the default limit on the maximum number
     // of buffers that will be allocated at one time. The image producer may
     // override the limit.
@@ -478,9 +472,6 @@ private:
     // It is set to false by detachFromContext, and then set to true again by
     // attachToContext.
     bool mAttached;
-
-    // see setSkipGLReleaseFence()
-    bool mSkipGLReleaseFence;
 
     // protects static initialization
     static Mutex sStaticInitLock;

@@ -162,13 +162,6 @@ void Layer::onLayerDisplayed(const sp<const DisplayDevice>& /* hw */,
     if (layer) {
         layer->onDisplayed();
         mSurfaceFlingerConsumer->setReleaseFence(layer->getAndResetReleaseFence());
-
-        // TODO: Fence is either not needed for 3D composed layer for Vivante EGL
-        if (layer->getCompositionType() == HWC_OVERLAY) {
-            // this layer is composed by HWC, avoid adding GL sync fence when it
-            // is released.
-            mSurfaceFlingerConsumer->setSkipGLReleaseFence();
-        }
     }
 }
 
