@@ -146,6 +146,7 @@ status_t EGLTextureObject::setSurface(GGLSurface const* s)
 status_t EGLTextureObject::setImage(ANativeWindowBuffer* native_buffer)
 {
     GGLSurface sur;
+    memset(&sur, 0, sizeof(sur));
     sur.version = sizeof(GGLSurface);
     sur.width = native_buffer->width;
     sur.height= native_buffer->height;
