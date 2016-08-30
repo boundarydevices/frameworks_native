@@ -527,10 +527,11 @@ status_t VirtualDisplaySurface::cancelBuffer(int pslot,
     VDS_LOGV("cancelBuffer pslot=%d", pslot);
     if (mCompositionType == COMPOSITION_MIXED) {
         Source source = fbSourceForCompositionType(mCompositionType);
-        mSource[source]->cancelBuffer(
+        return mSource[source]->cancelBuffer(
                 mapProducer2SourceSlot(source, pslot), fence);
     } else {
         /* Nothing for GLES-only, HWC composition. */
+        return NO_ERROR;
     }
 }
 

@@ -91,13 +91,13 @@ FloatRect LayerDim::computeCrop(const sp<const DisplayDevice>& hw) const {
     // a viewport clipping and a window transform. we should use floating point to fix this.
 
     Rect activeCrop(s.active.w, s.active.h);
-    if (!s.active.crop.isEmpty()) {
-        activeCrop = s.active.crop;
+    if (!s.crop.isEmpty()) {
+        activeCrop = s.crop;
     }
 
-    activeCrop = s.transform.transform(activeCrop);
+    activeCrop = s.active.transform.transform(activeCrop);
     activeCrop.intersect(hw->getViewport(), &activeCrop);
-    activeCrop = s.transform.inverse().transform(activeCrop);
+    activeCrop = s.active.transform.inverse().transform(activeCrop);
 
     // paranoia: make sure the window-crop is constrained in the
     // window's bounds
@@ -161,7 +161,7 @@ void LayerDim::setGeometry(
     }
     // apply the layer's transform, followed by the display's global transform
     // here we're guaranteed that the layer's transform preserves rects
-    Rect frame(s.transform.transform(computeBounds()));
+    Rect frame(s.active.transform.transform(computeBounds()));
     frame.intersect(hw->getViewport(), &frame);
     const Transform& tr(hw->getTransform());
     layer.setFrame(tr.transform(frame));
