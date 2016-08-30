@@ -292,11 +292,15 @@ status_t BufferQueueProducer::waitForFreeSlotThenRelock(FreeSlotCaller caller,
             } else {
                 if (caller == FreeSlotCaller::Dequeue) {
                     // If we're calling this from dequeue, prefer free buffers
-                    int slot = getFreeBufferLocked();
+                    int slot = BufferQueueCore::INVALID_BUFFER_SLOT;
+                    if (mCore->mAllowAllocation) {
+                        slot = getFreeSlotLocked();
+                    }
+
                     if (slot != BufferQueueCore::INVALID_BUFFER_SLOT) {
                         *found = slot;
-                    } else if (mCore->mAllowAllocation) {
-                        *found = getFreeSlotLocked();
+                    } else {
+                        *found = getFreeBufferLocked();
                     }
                 } else {
                     // If we're calling this from attach, prefer free slots
