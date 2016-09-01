@@ -3617,18 +3617,17 @@ status_t SurfaceFlinger::captureScreenImplLocked(
         const sp<IGraphicBufferProducer>& producer,
         Rect sourceCrop, uint32_t reqWidth, uint32_t reqHeight,
         uint32_t minLayerZ, uint32_t maxLayerZ,
-        bool useIdentityTransform, Transform::orientation_flags rotation)
+        bool useIdentityTransform, Transform::orientation_flags rotation,
+        bool isLocalScreenshot)
 {
     ATRACE_CALL();
 
     // get screen geometry
-    const uint32_t hw_w = hw->getWidth();
-    const uint32_t hw_h = hw->getHeight();
+    uint32_t hw_w = hw->getWidth();
+    uint32_t hw_h = hw->getHeight();
 
-    // if we have secure windows on this display, never allow the screen capture
-    if (hw->getSecureLayerVisible()) {
-        ALOGW("FB is protected: PERMISSION_DENIED");
-        return PERMISSION_DENIED;
+    if (rotation & Transform::ROT_90) {
+        std::swap(hw_w, hw_h);
     }
 
     if ((reqWidth > hw_w) || (reqHeight > hw_h)) {
@@ -3639,6 +3638,24 @@ status_t SurfaceFlinger::captureScreenImplLocked(
 
     reqWidth = (!reqWidth) ? hw_w : reqWidth;
     reqHeight = (!reqHeight) ? hw_h : reqHeight;
+
+    bool secureLayerIsVisible = false;
+    const LayerVector& layers(mDrawingState.layersSortedByZ);
+    const size_t count = layers.size();
+    for (size_t i = 0 ; i < count ; ++i) {
+        const sp<Layer>& layer(layers[i]);
+        const Layer::State& state(layer->getDrawingState());
+        if (state.layerStack == hw->getLayerStack() && state.z >= minLayerZ &&
+                state.z <= maxLayerZ && layer->isVisible() &&
+                layer->isSecure()) {
+            secureLayerIsVisible = true;
+        }
+    }
+
+    if (!isLocalScreenshot && secureLayerIsVisible) {
+        ALOGW("FB is protected: PERMISSION_DENIED");
+        return PERMISSION_DENIED;
+    }
 
     // Create a surface to render into
     sp<Surface> surface = new Surface(producer);
