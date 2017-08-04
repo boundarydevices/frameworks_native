@@ -20,13 +20,12 @@
 #define   OMX_VIDEO_CodingDIV3    (OMX_VIDEO_CodingVendorStartUnused + 3)  /**< Divx3 */
 #define   OMX_VIDEO_CodingDIV4    (OMX_VIDEO_CodingVendorStartUnused + 4)  /**< Divx4 */
 
-#define   OMX_VIDEO_WMVFormat9a   (OMX_VIDEO_WMFFormatVendorStartUnused + 1) /**< WVC1 */
-/**< WVC1 */
-#define   OMX_VIDEO_CodingWMV9    (OMX_VIDEO_WMFFormatVendorStartUnused + 21)
-/**< WVC1 */
-#define   OMX_VIDEO_WMVFormatWVC1 (OMX_VIDEO_WMFFormatVendorStartUnused + 22)
-/**< WVC1 */
-#define   OMX_VIDEO_SORENSON263   (OMX_VIDEO_WMFFormatVendorStartUnused + 23) /**< SORENSON */
+#define   OMX_VIDEO_CodingWMV9    (OMX_VIDEO_CodingVendorStartUnused + 8) /**< WVC1 */
+#define   OMX_VIDEO_CodingVP6     (OMX_VIDEO_CodingVendorStartUnused + 9)  /**< VP6 */
+#define   OMX_VIDEO_CodingSORENSON263   (OMX_VIDEO_CodingVendorStartUnused + 10) /**< SORENSON */
+
+#define   OMX_VIDEO_WMVFormat9a   (OMX_VIDEO_WMFFormatVendorStartUnused + 1)
+#define   OMX_VIDEO_WMVFormatWVC1 (OMX_VIDEO_WMFFormatVendorStartUnused + 2)
 
 #define   OMX_AUDIO_CodingAPE     (OMX_AUDIO_CodingVendorStartUnused + 6)
 
