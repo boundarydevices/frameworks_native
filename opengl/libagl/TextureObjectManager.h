@@ -28,6 +28,7 @@
 #include <utils/Errors.h>
 
 #include <private/pixelflinger/ggl_context.h>
+#include <graphics_ext.h>
 
 #include <GLES/gl.h>
 #include <EGL/egl.h>

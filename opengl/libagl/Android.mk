@@ -39,7 +39,8 @@ LOCAL_CFLAGS_mips += -fstrict-aliasing
 LOCAL_CFLAGS_mips += -mno-check-zero-division
 
 # we need to access the private Bionic header <bionic_tls.h>
-LOCAL_C_INCLUDES += bionic/libc/private
+LOCAL_C_INCLUDES += bionic/libc/private \
+                    hardware/imx/include
 
 LOCAL_MODULE_RELATIVE_PATH := egl
 LOCAL_MODULE:= libGLES_android
