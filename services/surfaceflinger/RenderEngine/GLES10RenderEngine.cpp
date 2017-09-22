@@ -73,6 +73,21 @@ void GLES10RenderEngine::setupLayerBlending(
     }
 }
 
+#ifdef USE_HWC2
+void GLES10RenderEngine::setColorMode(android_color_mode /* mode */) {
+}
+
+void GLES10RenderEngine::setSourceDataSpace(android_dataspace /* source */) {
+}
+
+void GLES10RenderEngine::setWideColor(bool /* hasWideColor */) {
+}
+
+bool GLES10RenderEngine::usesWideColor() {
+    return false;
+}
+#endif
+
 // ---------------------------------------------------------------------------
 }; // namespace android
 // ---------------------------------------------------------------------------

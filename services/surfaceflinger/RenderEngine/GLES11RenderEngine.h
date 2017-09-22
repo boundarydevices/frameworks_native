@@ -57,6 +57,10 @@ protected:
     virtual void setupLayerBlending(bool premultipliedAlpha, bool opaque,
             float alpha) override;
     virtual void setupDimLayerBlending(float alpha) override;
+    virtual void setColorMode(android_color_mode mode) override;
+    virtual void setSourceDataSpace(android_dataspace source) override;
+    virtual void setWideColor(bool hasWideColor) override;
+    virtual bool usesWideColor() override;
 #else
     virtual void setupLayerBlending(bool premultipliedAlpha, bool opaque,
             int alpha);
