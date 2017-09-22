@@ -295,6 +295,21 @@ void GLES11RenderEngine::dump(String8& result) {
     RenderEngine::dump(result);
 }
 
+#ifdef USE_HWC2
+void GLES11RenderEngine::setColorMode(android_color_mode /* mode */) {
+}
+
+void GLES11RenderEngine::setSourceDataSpace(android_dataspace /* source */) {
+}
+
+void GLES11RenderEngine::setWideColor(bool /* hasWideColor */) {
+}
+
+bool GLES11RenderEngine::usesWideColor() {
+    return false;
+}
+#endif
+
 // ---------------------------------------------------------------------------
 }; // namespace android
 // ---------------------------------------------------------------------------
