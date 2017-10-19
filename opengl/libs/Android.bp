@@ -138,6 +138,11 @@ cc_library_shared {
     static_libs: ["libEGL_getProcAddress"],
     ldflags: ["-Wl,--exclude-libs=ALL"],
     export_include_dirs: ["EGL/include"],
+    product_variables: {
+        useSwOpengl: {
+            cflags: ["-DUSE_SW_OPENGL"],
+        },
+    },
 }
 
 cc_test {
