@@ -98,14 +98,6 @@ checkGlesEmulationStatus(void)
     char  prop[PROPERTY_VALUE_MAX];
     int   result = -1;
 
-    // when OpenGL ES 2.0 is disabled, this property should be set to false.
-    // it is set to true by default.
-    property_get("sys.viewroot.hw", prop, "true");
-    if (strcmp(prop, "false") == 0) {
-        ALOGD("No GLES2.0 support detected. Fallback to load software opengl es.");
-        return 0;
-    }
-
     /* First, check for qemu=1 */
     property_get("ro.kernel.qemu",prop,"0");
     if (atoi(prop) != 1)
@@ -194,14 +186,6 @@ static void* load_wrapper(const char* path) {
 
 static void setEmulatorGlesValue(void) {
     char prop[PROPERTY_VALUE_MAX];
-
-    // when OpenGL ES 2.0 is disabled, this property should be set to false.
-    // it is set to true by default.
-    property_get("sys.viewroot.hw", prop, "true");
-    if (strcmp(prop, "false") == 0) {
-        return;
-    }
-
     property_get("ro.kernel.qemu", prop, "0");
     if (atoi(prop) != 1) return;
 
@@ -422,8 +406,11 @@ static void* load_system_driver(const char* kind) {
                         continue;
                     }
                     if (!strcmp(e->d_name, "libGLES_android.so")) {
+                        // don't skip software render if define USE_SW_OPENGL
+                        #ifndef USE_SW_OPENGL
                         // always skip the software renderer
                         continue;
+                        #endif
                     }
                     if (strstr(e->d_name, pattern.c_str()) == e->d_name) {
                         if (!strcmp(e->d_name + strlen(e->d_name) - 3, ".so")) {
