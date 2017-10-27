@@ -119,3 +119,16 @@ typedef struct DisableAVCReorderParams {
     OMX_VERSIONTYPE nVersion;
     OMX_BOOL bDisable;
 }OMX_PARAM_VIDEO_DISABLE_AVC_REORDER;
+
+#define   OMX_AUDIO_CodingBSAC    (OMX_AUDIO_CodingVendorStartUnused + 7)
+#define   OMX_IndexParamAudioBsac FSL_INDEXTYPE(76)
+  /** BSAC params */
+typedef struct OMX_AUDIO_PARAM_BSACTYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nPortIndex;
+    OMX_U32 nChannels;
+    OMX_U32 nBitRate;
+    OMX_U32 nSampleRate;
+    OMX_U32 nBitPerSample;
+} OMX_AUDIO_PARAM_BSACTYPE;
