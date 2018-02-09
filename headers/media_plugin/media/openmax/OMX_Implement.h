@@ -136,3 +136,7 @@ typedef struct OMX_AUDIO_PARAM_BSACTYPE {
 #define   FSL_INDEXCOLOR(n) ((OMX_COLOR_FORMATTYPE)(OMX_COLOR_FormatVendorStartUnused + n))
 #define   OMX_COLOR_Format32bitRGBA8888 FSL_INDEXCOLOR(1)
 #define   OMX_COLOR_FormatYUV420SemiPlanar8x128Tiled FSL_INDEXCOLOR(2)
+#define   OMX_COLOR_FormatYUV420SemiPlanar8x4Tiled FSL_INDEXCOLOR(3)
+#define   OMX_COLOR_FormatYUV420SemiPlanar4x4Tiled FSL_INDEXCOLOR(4)
+#define   OMX_COLOR_FormatYUV420SemiPlanar4x4TiledCompressed FSL_INDEXCOLOR(5)
+
