@@ -1053,7 +1053,7 @@ status_t BufferQueueProducer::cancelBuffer(int slot, const sp<Fence>& fence) {
     // Don't put the shared buffer on the free list.
     if (!mSlots[slot].mBufferState.isShared()) {
         mCore->mActiveBuffers.erase(slot);
-        mCore->mFreeBuffers.push_back(slot);
+        mCore->mFreeBuffers.push_front(slot);
     }
 
     mSlots[slot].mFence = fence;
