@@ -137,6 +137,7 @@ cc_library_shared {
     cflags: [
         "-fvisibility=hidden",
         "-Werror=format",
+        "-DREDUCE_VIDEO_WORKLOAD",
     ],
     srcs: [
         ":libsurfaceflinger_sources",
@@ -145,6 +146,13 @@ cc_library_shared {
     include_dirs: [
         "frameworks/native/vulkan/vkjson",
         "frameworks/native/vulkan/include",
+        "hardware/amlogic/gralloc/amlogic",
+        "hardware/amlogic/hwcomposer/tvp",
+        "hardware/amlogic/gralloc",
+    ],
+    static_libs: [
+        "libomxutils_static@2",
+        "libamgralloc_ext_static@2",
     ],
     cppflags: [
         "-fwhole-program-vtables", // requires ThinLTO

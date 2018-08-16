@@ -2808,7 +2808,7 @@ void SurfaceFlinger::invalidateLayerStack(const sp<const Layer>& layer, const Re
 bool SurfaceFlinger::handlePageFlip()
 {
     ALOGV("handlePageFlip");
-
+    Mutex::Autolock _l(mStateLock);
     nsecs_t latchTime = systemTime();
 
     bool visibleRegions = false;
