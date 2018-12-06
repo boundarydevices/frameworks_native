@@ -281,18 +281,6 @@ status_t BufferLayerConsumer::releaseNoTextureLocked(const BufferItem& item,
 
     int slot = item.mSlot;
 
-        // Do whatever sync ops we need to do before releasing the old slot.
-    if (slot != mCurrentTexture) {
-        err = syncForReleaseLocked();
-        if (err != NO_ERROR) {
-            // Release the buffer we just acquired.  It's not safe to
-            // release the old buffer, so instead we just drop the new frame.
-            // As we are still under lock since acquireBuffer, it is safe to
-            // release by slot.
-            releaseBufferLocked(slot, mSlots[slot].mGraphicBuffer);
-            return err;
-        }
-    }
 
     BLC_LOGV("releaseNoTextureLocked: (slot=%d buf=%p) -> (slot=%d buf=%p)", mCurrentTexture,
              mCurrentTextureImage != nullptr ? mCurrentTextureImage->graphicBufferHandle() : 0,
