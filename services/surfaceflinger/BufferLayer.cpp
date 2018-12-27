@@ -160,15 +160,14 @@ bool HwcSidebandAgent::preProcess(sp<GraphicBuffer> buffer) {
 }
 
 bool HwcSidebandAgent::isOmxVideoFrame(sp<GraphicBuffer> activeBuffer) {
-#if 0
-    static String8 trueVal("true");
-    char value[PROPERTY_VALUE_MAX] = {};
-    property_get("sys.mediastub.running", value, "0");
-    if (trueVal == String8(value)) {
-        ALOGV("Skip omx handle.\n");
-        return false;
-    }
-#endif
+   char value[PROPERTY_VALUE_MAX] = {};
+   int skip_omx_enabled = 0;
+
+   if (property_get("media.sf.omxvideo-optmize", value, "0") > 0)
+       skip_omx_enabled = atoi(value);
+
+   if (skip_omx_enabled)
+       return false;
 
     if (activeBuffer != 0) {
         bool ret = am_gralloc_is_omx_metadata_producer(activeBuffer->getUsage());
