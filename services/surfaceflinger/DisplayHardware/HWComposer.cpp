@@ -145,8 +145,17 @@ void HWComposer::onHotplug(hwc2_display_t displayId, int32_t displayType,
     // Disconnect is handled through HWComposer::disconnectDisplay via
     // SurfaceFlinger's onHotplugReceived callback handling
     if (connection == HWC2::Connection::Connected) {
-        mDisplayData[displayType].hwcDisplay = mHwcDevice->getDisplayById(displayId);
-        mHwcDisplaySlots[displayId] = displayType;
+#ifdef USE_AML_HW_ACTIVE_MODE
+        if (displayId == DisplayDevice::DISPLAY_PRIMARY){
+            if (!mDisplayData[0].hwcDisplay){
+#endif
+                mDisplayData[displayType].hwcDisplay = mHwcDevice->getDisplayById(displayId);
+                mHwcDisplaySlots[displayId] = displayType;
+#ifdef USE_AML_HW_ACTIVE_MODE
+            }
+        }
+#endif
+
     }
 }
 
@@ -289,6 +298,12 @@ std::vector<std::shared_ptr<const HWC2::Display::Config>>
 
     auto& displayData = mDisplayData[displayId];
     auto configs = mDisplayData[displayId].hwcDisplay->getConfigs();
+
+#ifdef USE_AML_HW_ACTIVE_MODE
+    // need to clear configMap to update configs.
+    displayData.configMap.clear();
+#endif
+
     if (displayData.configMap.empty()) {
         for (size_t i = 0; i < configs.size(); ++i) {
             displayData.configMap[i] = configs[i];

@@ -138,6 +138,7 @@ cc_library_shared {
         "-fvisibility=hidden",
         "-Werror=format",
         "-DREDUCE_VIDEO_WORKLOAD",
+        "-DUSE_AML_HW_ACTIVE_MODE",
     ],
     srcs: [
         ":libsurfaceflinger_sources",
