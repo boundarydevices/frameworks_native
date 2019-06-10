@@ -161,25 +161,27 @@ void Device::onHotplug(hwc2_display_t displayId, Connection connection) {
         if (oldDisplay != nullptr && oldDisplay->isConnected()) {
             ALOGI("Hotplug connecting an already connected display."
                     " Clearing old display state.");
-        }
-        mDisplays.erase(displayId);
+            oldDisplay->setConnected(true);
+        } else {
+            mDisplays.erase(displayId);
 
-        DisplayType displayType;
-        auto intError = mComposer->getDisplayType(displayId,
-                reinterpret_cast<Hwc2::IComposerClient::DisplayType *>(
-                        &displayType));
-        auto error = static_cast<Error>(intError);
-        if (error != Error::None) {
-            ALOGE("getDisplayType(%" PRIu64 ") failed: %s (%d). "
-                    "Aborting hotplug attempt.",
-                    displayId, to_string(error).c_str(), intError);
-            return;
-        }
+            DisplayType displayType;
+            auto intError = mComposer->getDisplayType(displayId,
+                    reinterpret_cast<Hwc2::IComposerClient::DisplayType *>(
+                            &displayType));
+            auto error = static_cast<Error>(intError);
+            if (error != Error::None) {
+                ALOGE("getDisplayType(%" PRIu64 ") failed: %s (%d). "
+                        "Aborting hotplug attempt.",
+                        displayId, to_string(error).c_str(), intError);
+                return;
+            }
 
-        auto newDisplay = std::make_unique<Display>(
-                *mComposer.get(), mCapabilities, displayId, displayType);
-        newDisplay->setConnected(true);
-        mDisplays.emplace(displayId, std::move(newDisplay));
+            auto newDisplay = std::make_unique<Display>(
+                    *mComposer.get(), mCapabilities, displayId, displayType);
+            newDisplay->setConnected(true);
+            mDisplays.emplace(displayId, std::move(newDisplay));
+        }
     } else if (connection == Connection::Disconnected) {
         // The display will later be destroyed by a call to
         // destroyDisplay(). For now we just mark it disconnected.
@@ -710,7 +712,7 @@ Error Display::presentOrValidate(uint32_t* outNumTypes, uint32_t* outNumRequests
 // For use by Device
 
 void Display::setConnected(bool connected) {
-    if (!mIsConnected && connected) {
+    if (connected) {
         mComposer.setClientTargetSlotCount(mId);
         if (mType == DisplayType::Physical) {
             loadConfigs();
