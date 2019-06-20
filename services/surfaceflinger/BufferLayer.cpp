@@ -267,6 +267,7 @@ BufferLayer::BufferLayer(SurfaceFlinger* flinger, const sp<Client>& client, cons
         mOmxOverlayLayer(false),
         mOmxFrameCount(0),
         mOmxFrameCountLock(),
+        mRecomputeVisibleLock(),
 #endif
         mRefreshPending(false) {
     ALOGV("Creating Layer %s", name.string());
@@ -1320,6 +1321,50 @@ bool BufferLayer::consumeOmxFrame(status_t &updateResult) {
         // to continue to ignore updates.
         mUpdateTexImageFailed = true;
         return false;
+    }
+
+    {
+        Mutex::Autolock lock(mRecomputeVisibleLock);
+        // Capture the old state of the layer for comparisons later
+        const State& s(getDrawingState());
+        const bool oldOpacity = isOpaque(s);
+        sp<GraphicBuffer> oldBuffer = getBE().compositionInfo.mBuffer;
+
+        if (oldBuffer == nullptr) {
+            // the first time we receive a buffer, we need to trigger a
+            // geometry invalidation.
+            recomputeVisibleRegions = true;
+        }
+
+        Rect crop(mConsumer->getCurrentCrop());
+        const uint32_t transform(mConsumer->getCurrentTransform());
+        const uint32_t scalingMode(mConsumer->getCurrentScalingMode());
+        if ((crop != mCurrentCrop) ||
+            (transform != mCurrentTransform) ||
+            (scalingMode != mCurrentScalingMode)) {
+            mCurrentCrop = crop;
+            mCurrentTransform = transform;
+            mCurrentScalingMode = scalingMode;
+            recomputeVisibleRegions = true;
+        }
+
+        if (oldBuffer != nullptr) {
+            uint32_t bufWidth = getBE().compositionInfo.mBuffer->getWidth();
+            uint32_t bufHeight = getBE().compositionInfo.mBuffer->getHeight();
+            if (bufWidth != uint32_t(oldBuffer->width) ||
+                bufHeight != uint32_t(oldBuffer->height)) {
+                recomputeVisibleRegions = true;
+            }
+        }
+
+        mCurrentOpacity = getOpacityForFormat(getBE().compositionInfo.mBuffer->format);
+        if (oldOpacity != isOpaque(s)) {
+            recomputeVisibleRegions = true;
+        }
+
+        if (recomputeVisibleRegions) {
+            mFlinger->invalidateHwcGeometry();
+        }
     }
 
     if (queuedBuffer) {

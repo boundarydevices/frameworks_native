@@ -204,12 +204,13 @@ private:
     bool mUpdateTexImageFailed; // This is only accessed on the main thread.
 
 #ifdef REDUCE_VIDEO_WORKLOAD
-		bool mOmxOverlayLayer;
-		sp<HwcSidebandAgent> mHwcAgent;
+    bool mOmxOverlayLayer;
+    sp<HwcSidebandAgent> mHwcAgent;
 
-		// thread-safe
-		volatile int32_t mOmxFrameCount;
-		mutable Mutex mOmxFrameCountLock;
+    // thread-safe
+    volatile int32_t mOmxFrameCount;
+    mutable Mutex mOmxFrameCountLock;
+    mutable Mutex mRecomputeVisibleLock;
 #endif
 
     bool mRefreshPending;
