@@ -656,6 +656,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     // Raw width and height in the natural orientation.
     int32_t rawWidth = mRawPointerAxes.getRawWidth();
     int32_t rawHeight = mRawPointerAxes.getRawHeight();
+    newViewport->orientation = (newViewport->orientation + mRawPointerAxes.hwrotation) % 4;
 
     bool viewportChanged = mViewport != *newViewport;
     bool skipViewportUpdate = false;
