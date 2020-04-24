@@ -17,6 +17,7 @@
 #include "../Macros.h"
 
 #include "MultiTouchInputMapper.h"
+#include <cutils/properties.h>
 
 namespace android {
 
@@ -366,6 +367,21 @@ void MultiTouchInputMapper::configureRawPointerAxes() {
     getAbsoluteAxisInfo(ABS_MT_DISTANCE, &mRawPointerAxes.distance);
     getAbsoluteAxisInfo(ABS_MT_TRACKING_ID, &mRawPointerAxes.trackingId);
     getAbsoluteAxisInfo(ABS_MT_SLOT, &mRawPointerAxes.slot);
+
+    switch (property_get_int32("ro.boot.hwrotation", 0)) {
+    case 90:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_90;
+        break;
+    case 180:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_180;
+        break;
+    case 270:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_270;
+        break;
+    default:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_0;
+        break;
+    }
 
     if (mRawPointerAxes.trackingId.valid && mRawPointerAxes.slot.valid &&
         mRawPointerAxes.slot.minValue == 0 && mRawPointerAxes.slot.maxValue > 0) {
