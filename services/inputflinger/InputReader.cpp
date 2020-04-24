@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <cutils/properties.h>
 #include <log/log.h>
 
 #include <android-base/stringprintf.h>
@@ -3553,6 +3554,7 @@ void TouchInputMapper::configureSurface(nsecs_t when, bool* outResetNeeded) {
     // Raw width and height in the natural orientation.
     int32_t rawWidth = mRawPointerAxes.getRawWidth();
     int32_t rawHeight = mRawPointerAxes.getRawHeight();
+    newViewport->orientation = (newViewport->orientation + mRawPointerAxes.hwrotation) % 4;
 
     bool viewportChanged = mViewport != *newViewport;
     if (viewportChanged) {
@@ -7044,6 +7046,21 @@ void MultiTouchInputMapper::configureRawPointerAxes() {
     getAbsoluteAxisInfo(ABS_MT_DISTANCE, &mRawPointerAxes.distance);
     getAbsoluteAxisInfo(ABS_MT_TRACKING_ID, &mRawPointerAxes.trackingId);
     getAbsoluteAxisInfo(ABS_MT_SLOT, &mRawPointerAxes.slot);
+
+    switch (property_get_int32("ro.boot.hwrotation", 0)) {
+    case 90:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_90;
+        break;
+    case 180:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_180;
+        break;
+    case 270:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_270;
+        break;
+    default:
+        mRawPointerAxes.hwrotation = DISPLAY_ORIENTATION_0;
+        break;
+    }
 
     if (mRawPointerAxes.trackingId.valid
             && mRawPointerAxes.slot.valid

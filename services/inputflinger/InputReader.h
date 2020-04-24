@@ -476,6 +476,7 @@ struct RawPointerAxes {
     RawAbsoluteAxisInfo tiltY;
     RawAbsoluteAxisInfo trackingId;
     RawAbsoluteAxisInfo slot;
+    int hwrotation;
 
     RawPointerAxes();
     inline int32_t getRawWidth() const { return x.maxValue - x.minValue + 1; }
