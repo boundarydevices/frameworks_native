@@ -35,6 +35,7 @@
 #include <ui/DebugUtils.h>
 #include <ui/GraphicBuffer.h>
 #include <ui/Rect.h>
+#include <cutils/properties.h>
 
 #include "FramebufferSurface.h"
 #include "HWComposer.h"
@@ -45,6 +46,39 @@ namespace android {
 // ----------------------------------------------------------------------------
 
 using ui::Dataspace;
+
+/*
+ * platform private usage to support framebuffer tile and tile compression.
+ * imx8mq support framebuffer tile with compression.
+ * imx8qm/imx8qxp support framebuffer tile.
+ */
+
+static uint64_t GetPlatformPrivateUsage()
+{
+    uint64_t usage = 0;
+    char name[PROPERTY_VALUE_MAX] = {};
+
+    property_get("ro.boot.fbTileSupport", name, "");
+
+    if((name[0] != '\0') && (strcmp(name, "enable") == 0))
+    {
+        property_get("ro.boot.soc_type", name, "");
+
+        if(name[0] != '\0')
+        {
+            if(strcmp(name, "imx8mq") == 0)
+            {
+                usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
+            }
+            else if((strcmp(name, "imx8qm") == 0) || (strcmp(name, "imx8qxp") == 0))
+            {
+                usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0;
+            }
+        }
+    }
+
+    return usage;
+}
 
 /*
  * This implements the (main) framebuffer management. This class is used
@@ -69,7 +103,8 @@ FramebufferSurface::FramebufferSurface(HWComposer& hwc, DisplayId displayId,
     mConsumer->setConsumerName(mName);
     mConsumer->setConsumerUsageBits(GRALLOC_USAGE_HW_FB |
                                        GRALLOC_USAGE_HW_RENDER |
-                                       GRALLOC_USAGE_HW_COMPOSER);
+                                       GRALLOC_USAGE_HW_COMPOSER |
+                                       GetPlatformPrivateUsage());
     const auto& activeConfig = mHwc.getActiveConfig(displayId);
     mConsumer->setDefaultBufferSize(activeConfig->getWidth(),
             activeConfig->getHeight());
