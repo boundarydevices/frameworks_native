@@ -60,21 +60,24 @@ using ui::Dataspace;
 static uint64_t GetPlatformPrivateUsage()
 {
     uint64_t usage = 0;
-    char name[PROPERTY_VALUE_MAX] = {};
+    char prop[PROPERTY_VALUE_MAX] = {};
+    char drm_prop[PROPERTY_VALUE_MAX] = {};
 
-    property_get("ro.boot.fbTileSupport", name, "");
+    property_get("ro.boot.fbTileSupport", prop, "");
+    property_get("hwc.drm.fbTileSupport", drm_prop, "enable");
 
-    if((name[0] != '\0') && (strcmp(name, "enable") == 0))
+    if((prop[0] != '\0') && (strcmp(prop, "enable") == 0)
+        && (strcmp(drm_prop, "enable") == 0))
     {
-        property_get("ro.boot.soc_type", name, "");
+        property_get("ro.boot.soc_type", prop, "");
 
-        if(name[0] != '\0')
+        if(prop[0] != '\0')
         {
-            if(strcmp(name, "imx8mq") == 0)
+            if(strcmp(prop, "imx8mq") == 0)
             {
                 usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
             }
-            else if((strcmp(name, "imx8qm") == 0) || (strcmp(name, "imx8qxp") == 0))
+            else if((strcmp(prop, "imx8qm") == 0) || (strcmp(prop, "imx8qxp") == 0))
             {
                 usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0;
             }
