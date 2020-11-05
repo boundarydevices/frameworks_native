@@ -5520,7 +5520,8 @@ status_t SurfaceFlinger::captureScreen(uint64_t displayOrLayerStack, Dataspace* 
         height = uint32_t(display->getViewport().height());
 
         const auto orientation = display->getOrientation();
-        captureOrientation = ui::Transform::toRotationFlags(orientation);
+        const auto physicalOrientation = display->getPhysicalOrientation();
+        captureOrientation = ui::Transform::toRotationFlags(orientation + physicalOrientation);
 
         switch (captureOrientation) {
             case ui::Transform::ROT_90:
