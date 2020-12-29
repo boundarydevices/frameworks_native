@@ -64,7 +64,7 @@ static uint64_t GetPlatformPrivateUsage()
     char drm_prop[PROPERTY_VALUE_MAX] = {};
 
     property_get("ro.boot.fbTileSupport", prop, "");
-    property_get("hwc.drm.fbTileSupport", drm_prop, "enable");
+    property_get("vendor.hwc.drm.fbTileSupport", drm_prop, "enable");
 
     if((prop[0] != '\0') && (strcmp(prop, "enable") == 0)
         && (strcmp(drm_prop, "enable") == 0))
