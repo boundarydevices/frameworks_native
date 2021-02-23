@@ -55,17 +55,14 @@ using ui::Dataspace;
  * imx8qm/imx8qxp support framebuffer tile.
  */
 
-static uint64_t GetPlatformPrivateUsage()
+static uint64_t GetPlatformPrivateUsage(HWComposer& hwc, PhysicalDisplayId displayId)
 {
     uint64_t usage = 0;
     char prop[PROPERTY_VALUE_MAX] = {};
-    char drm_prop[PROPERTY_VALUE_MAX] = {};
 
     property_get("ro.boot.fbTileSupport", prop, "");
-    property_get("vendor.hwc.drm.fbTileSupport", drm_prop, "enable");
 
-    if((prop[0] != '\0') && (strcmp(prop, "enable") == 0)
-        && (strcmp(drm_prop, "enable") == 0))
+    if((prop[0] != '\0') && (strcmp(prop, "enable") == 0))
     {
         property_get("ro.boot.soc_type", prop, "");
 
@@ -73,7 +70,15 @@ static uint64_t GetPlatformPrivateUsage()
         {
             if(strcmp(prop, "imx8mq") == 0)
             {
-                usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
+                uint8_t port = 0;
+                DisplayIdentificationData outData;
+                auto hwId = hwc.fromPhysicalDisplayId(displayId);
+                if (!hwc.getDisplayIdentificationData(hwId.value(), &port, &outData))
+                {
+                    ALOGE("%s get display port failed", __func__);
+                }
+                if ((port >> 6) == 0) // Bit6 of display port indicate hardware support tile or not, 1 means not support
+                    usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
             }
             else if((strcmp(prop, "imx8qm") == 0) || (strcmp(prop, "imx8qxp") == 0))
             {
@@ -111,7 +116,7 @@ FramebufferSurface::FramebufferSurface(HWComposer& hwc, PhysicalDisplayId displa
     mConsumer->setConsumerUsageBits(GRALLOC_USAGE_HW_FB |
                                        GRALLOC_USAGE_HW_RENDER |
                                        GRALLOC_USAGE_HW_COMPOSER |
-                                       GetPlatformPrivateUsage());
+                                       GetPlatformPrivateUsage(hwc, displayId));
     const auto limitedSize = limitSize(size);
     mConsumer->setDefaultBufferSize(limitedSize.width, limitedSize.height);
     mConsumer->setMaxAcquiredBufferCount(
