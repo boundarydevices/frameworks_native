@@ -53,6 +53,8 @@
 
 using aidl::android::hardware::graphics::composer3::Composition;
 
+#define BUFFER_IS_VENDOR_FORMAT(buffer) ((buffer) != nullptr && ((buffer)->format >= 0x104 && (buffer)->format <= 0x110))
+
 namespace android::compositionengine {
 
 Output::~Output() = default;
@@ -722,6 +724,7 @@ void Output::updateCompositionState(const compositionengine::CompositionRefreshA
 
     mLayerRequestingBackgroundBlur = findLayerRequestingBackgroundComposition();
     bool forceClientComposition = mLayerRequestingBackgroundBlur != nullptr;
+    bool skipForceClientComposition = findVendorFormatLayer();
 
     for (auto* layer : getOutputLayersOrderedByZ()) {
         layer->updateCompositionState(refreshArgs.updatingGeometryThisFrame,
@@ -731,6 +734,11 @@ void Output::updateCompositionState(const compositionengine::CompositionRefreshA
 
         if (mLayerRequestingBackgroundBlur == layer) {
             forceClientComposition = false;
+        }
+
+        const auto* layerFEState = layer->getLayerFE().getCompositionState();
+        if (layerFEState->forceClientComposition && skipForceClientComposition) {
+            layer->editState().forceClientComposition = false;
         }
     }
 }
@@ -830,6 +838,16 @@ compositionengine::OutputLayer* Output::findLayerRequestingBackgroundComposition
         }
     }
     return layerRequestingBgComposition;
+}
+
+bool Output::findVendorFormatLayer() const {
+    for (auto* layer : getOutputLayersOrderedByZ()) {
+        const auto* layerFEState = layer->getLayerFE().getCompositionState();
+        if (BUFFER_IS_VENDOR_FORMAT(layerFEState->buffer)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Output::updateColorProfile(const compositionengine::CompositionRefreshArgs& refreshArgs) {
