@@ -73,6 +73,7 @@ public:
     using ClientTargetProperty = android::HWComposer::DeviceRequestedChanges::ClientTargetProperty;
     virtual bool anyLayersRequireClientComposition() const;
     virtual bool allLayersRequireClientComposition() const;
+    virtual bool anyLayersMayForceClientComposition() const;
     virtual void applyChangedTypesToLayers(const ChangedTypes&);
     virtual void applyDisplayRequests(const DisplayRequests&);
     virtual void applyLayerRequestsToLayers(const LayerRequests&);

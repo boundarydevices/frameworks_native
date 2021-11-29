@@ -271,11 +271,18 @@ bool Display::allLayersRequireClientComposition() const {
                        [](const auto& layer) { return layer->requiresClientComposition(); });
 }
 
+bool Display::anyLayersMayForceClientComposition() const {
+    const auto layers = getOutputLayersOrderedByZ();
+    return std::any_of(layers.begin(), layers.end(),
+                       [](const auto& layer) { return layer->getLayerFE().hasRoundedCorners(); });
+}
+
 void Display::applyChangedTypesToLayers(const ChangedTypes& changedTypes) {
     if (changedTypes.empty()) {
         return;
     }
 
+    bool mayForceClient = anyLayersMayForceClientComposition();
     for (auto* layer : getOutputLayersOrderedByZ()) {
         auto hwcLayer = layer->getHwcLayer();
         if (!hwcLayer) {
@@ -283,8 +290,14 @@ void Display::applyChangedTypesToLayers(const ChangedTypes& changedTypes) {
         }
 
         if (auto it = changedTypes.find(hwcLayer); it != changedTypes.end()) {
-            layer->applyDeviceCompositionTypeChange(
-                    static_cast<Hwc2::IComposerClient::Composition>(it->second));
+            if (mayForceClient && (it->second == hal::Composition::DEVICE))
+                layer->applyDeviceCompositionTypeChange(hal::Composition::CLIENT);
+            else
+                layer->applyDeviceCompositionTypeChange(
+                        static_cast<Hwc2::IComposerClient::Composition>(it->second));
+        } else {
+            if (mayForceClient && ((*layer->getState().hwc).hwcCompositionType == hal::Composition::DEVICE))
+                layer->applyDeviceCompositionTypeChange(hal::Composition::CLIENT);
         }
     }
 }
