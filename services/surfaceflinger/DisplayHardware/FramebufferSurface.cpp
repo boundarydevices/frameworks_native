@@ -79,8 +79,15 @@ static uint64_t GetPlatformPrivateUsage(HWComposer& hwc, PhysicalDisplayId displ
                 {
                     ALOGE("%s get display port failed", __func__);
                 }
-                if ((port >> 6) == 0) // Bit6 of display port indicate hardware support tile or not, 1 means not support
-                    usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
+                if ((port >> 6) == 0) {// Bit6 of display port indicate hardware support tile or not, 1 means not support
+                    memset(prop, 0, PROPERTY_VALUE_MAX);
+                    property_get("ro.boot.androidui.overlay", prop, "");
+                    if ((prop[0] != '\0') && (strcmp(prop, "enable") == 0)) {
+                        usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0;
+                    } else {
+                        usage = GRALLOC_USAGE_HW_TEXTURE | GRALLOC_USAGE_PRIVATE_0 | GRALLOC_USAGE_PRIVATE_1;
+                    }
+                }
             }
             else if((strcmp(prop, "imx8qm") == 0) || (strcmp(prop, "imx8qxp") == 0))
             {
