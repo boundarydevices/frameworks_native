@@ -21,6 +21,7 @@
 #include "TouchInputMapper.h"
 
 #include <ftl/enum.h>
+#include <cutils/properties.h>
 
 #include "CursorButtonAccumulator.h"
 #include "CursorScrollAccumulator.h"
@@ -479,6 +480,21 @@ void TouchInputMapper::configureParameters() {
             mParameters.orientation = Parameters::Orientation::ORIENTATION_270;
         } else if (orientationString != "ORIENTATION_0") {
             ALOGW("Invalid value for touch.orientation: '%s'", orientationString.string());
+        }
+    } else {
+        switch (property_get_int32("ro.boot.hwrotation", 0)) {
+        case 90:
+            mParameters.orientation = Parameters::Orientation::ORIENTATION_90;
+            break;
+        case 180:
+            mParameters.orientation = Parameters::Orientation::ORIENTATION_180;
+            break;
+        case 270:
+            mParameters.orientation = Parameters::Orientation::ORIENTATION_270;
+            break;
+        default:
+            mParameters.orientation = Parameters::Orientation::ORIENTATION_0;
+            break;
         }
     }
 
