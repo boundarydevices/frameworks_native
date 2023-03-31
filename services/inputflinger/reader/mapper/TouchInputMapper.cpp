@@ -936,7 +936,6 @@ void TouchInputMapper::configureInputDevice(nsecs_t when, bool* outResetNeeded) 
     // Raw width and height in the natural orientation.
     const int32_t rawWidth = mRawPointerAxes.getRawWidth();
     const int32_t rawHeight = mRawPointerAxes.getRawHeight();
-    newViewport->orientation = (newViewport->orientation + mRawPointerAxes.hwrotation) % 4;
 
     const bool viewportChanged = mViewport != *newViewport;
     bool skipViewportUpdate = false;
