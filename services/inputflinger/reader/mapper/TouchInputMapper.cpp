@@ -20,6 +20,7 @@
 
 #include "TouchInputMapper.h"
 
+#include <cutils/properties.h>
 #include <ftl/enum.h>
 #include <input/PrintTools.h>
 
@@ -405,6 +406,21 @@ TouchInputMapper::Parameters TouchInputMapper::computeParameters(
             parameters.orientation = ui::ROTATION_270;
         } else if (*orientationString != "ORIENTATION_0") {
             ALOGW("Invalid value for touch.orientation: '%s'", orientationString->c_str());
+        }
+    } else {
+        switch (property_get_int32("ro.boot.hwrotation", 0)) {
+        case 90:
+            parameters.orientation = ui::ROTATION_90;
+            break;
+        case 180:
+            parameters.orientation = ui::ROTATION_180;
+            break;
+        case 270:
+            parameters.orientation = ui::ROTATION_270;
+            break;
+        default:
+            parameters.orientation = ui::ROTATION_0;
+            break;
         }
     }
 
