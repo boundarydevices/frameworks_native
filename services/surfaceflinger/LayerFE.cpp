@@ -1,5 +1,6 @@
 /*
  * Copyright 2022 The Android Open Source Project
+ * Copyright 2023 NXP.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +28,8 @@
 
 #include "LayerFE.h"
 #include "SurfaceFlinger.h"
+
+#define IS_VENDOR_FORMAT(f) (((f) >= 0x104 && (f) <= 0x110) || ((f) == HAL_PIXEL_FORMAT_YCBCR_P010))
 
 namespace android {
 
@@ -210,7 +213,8 @@ void LayerFE::prepareBufferStateClientComposition(
     }
     const bool blackOutLayer =
             (mSnapshot->hasProtectedContent && !targetSettings.supportsProtectedContent) ||
-            ((mSnapshot->isSecure || mSnapshot->hasProtectedContent) && !targetSettings.isSecure);
+            ((mSnapshot->isSecure || mSnapshot->hasProtectedContent) && !targetSettings.isSecure) ||
+            IS_VENDOR_FORMAT(mSnapshot->buffer->getPixelFormat());
     const bool bufferCanBeUsedAsHwTexture =
             mSnapshot->externalTexture->getUsage() & GraphicBuffer::USAGE_HW_TEXTURE;
     if (blackOutLayer || !bufferCanBeUsedAsHwTexture) {
